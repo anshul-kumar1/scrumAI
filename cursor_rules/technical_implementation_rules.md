@@ -21,10 +21,11 @@ Implement the dual-runtime architecture for the audio meeting application:
 
 **SUPABASE DATABASE SCHEMA:**
 ```sql
--- meetings table: id, title, created_at, status, host_id
--- participants table: id, meeting_id, name, joined_at, audio_enabled
--- insights table: id, meeting_id, participant_id, timestamp, insight_type, data, confidence
--- transcripts table: id, meeting_id, speaker_id, timestamp, text, sentiment_score
+-- companies table: id, name, created_at
+-- profiles table: id, full_name, email, created_at
+-- memberships table: user_id refrences profiles(id), comapny_id refrences companies(id), role, is_active, created_at
+-- meetings table: id, company_id refrences companies(id)
+-- meeting_log table: id refrences meetings(id), user_id refrences profiles(id), joined_time timestamptz, leave_time timestamptz 
 ```
 
 **INTER-PROCESS COMMUNICATION:**
