@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScrumAI Meeting Assistant</title>
+    
+    <!-- 
+        Main HTML file for the Electron renderer process
+        
+        This file serves as the primary UI entry point for the application.
+        Responsibilities:
+        - Provide the main meeting interface structure
+        - Load CSS styles and JavaScript components
+        - Display real-time meeting data and AI insights
+        - Handle user interactions for meeting controls
+        - Show participant information and audio visualizations
+    -->
+    
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="../assets/icon.png" alt="ScrumAI" class="app-logo">
+                <h1>ScrumAI Meeting Assistant</h1>
+            </div>
+            <div class="meeting-status">
+                <span id="meeting-status-indicator" class="status-indicator inactive">Inactive</span>
+                <span id="meeting-duration" class="meeting-timer">00:00:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <div class="meeting-controls">
+                <button id="start-meeting-btn" class="control-btn primary">
+                    <span class="btn-icon">🎤</span>
+                    Start Meeting
+                </button>
+                <button id="stop-meeting-btn" class="control-btn danger" disabled>
+                    <span class="btn-icon">⏹️</span>
+                    Stop Meeting
+                </button>
+                <button id="mute-btn" class="control-btn secondary">
+                    <span class="btn-icon">🔊</span>
+                    Mute
+                </button>
+            </div>
+            
+            <!-- Audio Visualization -->
+            <div class="audio-visualization">
+                <canvas id="audio-canvas" width="400" height="100"></canvas>
+                <div class="audio-levels">
+                    <div class="level-indicator" id="mic-level"></div>
+                    <span class="level-label">Microphone Level</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Real-time Content Area -->
+        <div class="content-grid">
+            <!-- Live Transcription -->
+            <section class="transcription-panel">
+                <h2>Live Transcription</h2>
+                <div id="transcription-container" class="transcription-content">
+                    <p class="placeholder-text">Start a meeting to see live transcription...</p>
+                </div>
+                <div class="transcription-controls">
+                    <button id="clear-transcription" class="control-btn small">Clear</button>
+                    <button id="export-transcription" class="control-btn small">Export</button>
+                </div>
+            </section>
+
+            <!-- AI Insights Panel -->
+            <section class="insights-panel">
+                <h2>AI Insights</h2>
+                <div class="insights-tabs">
+                    <button class="tab-btn active" data-tab="sentiment">Sentiment</button>
+                    <button class="tab-btn" data-tab="keywords">Keywords</button>
+                    <button class="tab-btn" data-tab="action-items">Action Items</button>
+                </div>
+                
+                <div class="insights-content">
+                    <div id="sentiment-tab" class="tab-content active">
+                        <div class="sentiment-meter">
+                            <div class="sentiment-indicator" id="sentiment-indicator"></div>
+                            <span class="sentiment-label" id="sentiment-label">Neutral</span>
+                        </div>
+                        <div class="sentiment-history" id="sentiment-history"></div>
+                    </div>
+                    
+                    <div id="keywords-tab" class="tab-content">
+                        <div class="keywords-cloud" id="keywords-cloud">
+                            <p class="placeholder-text">Keywords will appear here during the meeting...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="action-items-tab" class="tab-content">
+                        <div class="action-items-list" id="action-items-list">
+                            <p class="placeholder-text">Action items will be detected automatically...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Participants Panel -->
+            <section class="participants-panel">
+                <h2>Participants</h2>
+                <div id="participants-list" class="participants-list">
+                    <div class="participant-item">
+                        <div class="participant-avatar">👤</div>
+                        <div class="participant-info">
+                            <span class="participant-name">Current User</span>
+                            <span class="participant-status">Speaking</span>
+                        </div>
+                        <div class="participant-indicators">
+                            <span class="activity-indicator active"></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <div class="connection-status">
+                <span id="db-status" class="status-indicator">🔗 Database: Connected</span>
+                <span id="ai-status" class="status-indicator">🧠 AI: Ready</span>
+            </div>
+            <div class="app-version">
+                <span>v1.0.0 | Privacy-First AI Processing</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p>Initializing AI models...</p>
+    </div>
+
+    <!-- JavaScript Components -->
+    <script src="js/audio-manager.js"></script>
+    <script src="js/ai-interface.js"></script>
+    <script src="js/database-client.js"></script>
+    <script src="js/ui-controller.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
