@@ -532,6 +532,31 @@ html, body {
     font-size: 14px;
 }
 
+.github-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #1f2937, #374151);
+    border: 1px solid #4b5563;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.github-btn:hover {
+    background: linear-gradient(135deg, #374151, #4b5563);
+    border-color: #6b7280;
+    transform: translateY(-1px);
+}
+
+.github-btn .btn-icon {
+    font-size: 14px;
+}
+
 .notes-content,
 .strategy-content {
     flex: 1;
