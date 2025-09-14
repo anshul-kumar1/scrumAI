@@ -46,17 +46,53 @@ class ChatbotService {
             console.log('Starting AnythingLLM chatbot process...');
             console.log('Script path:', scriptPath);
             console.log('Working directory:', workingDir);
+            console.log('Python command:', pythonPath);
 
             this.chatbotProcess = spawn(pythonPath, [scriptPath], {
                 cwd: workingDir,
                 stdio: ['pipe', 'pipe', 'pipe']
             });
 
-            this.isRunning = true;
             this.setupProcessHandlers();
 
-            // Give the process a moment to start
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Wait for process to fully initialize before marking as running
+            await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    if (!this.isRunning) {
+                        reject(new Error('Chatbot process failed to start within timeout'));
+                    } else {
+                        resolve();
+                    }
+                }, 5000);
+
+                // Listen for initial stderr/stdout to confirm process started
+                const onData = (data) => {
+                    console.log('Chatbot process initial output:', data.toString());
+                    this.isRunning = true;
+                    clearTimeout(timeout);
+                    resolve();
+                };
+
+                const onError = (error) => {
+                    console.error('Chatbot process startup error:', error);
+                    clearTimeout(timeout);
+                    reject(error);
+                };
+
+                this.chatbotProcess.stdout.once('data', onData);
+                this.chatbotProcess.stderr.once('data', onData);
+                this.chatbotProcess.once('error', onError);
+
+                // If no output after 2 seconds, assume it started successfully
+                setTimeout(() => {
+                    if (!this.isRunning) {
+                        console.log('No initial output from chatbot process, assuming started');
+                        this.isRunning = true;
+                        clearTimeout(timeout);
+                        resolve();
+                    }
+                }, 2000);
+            });
 
             console.log('Chatbot service started successfully');
 
@@ -138,8 +174,16 @@ class ChatbotService {
      * Send a message to the chatbot with intelligent context switching
      */
     async sendMessage(message, stream = false, useRAG = false) {
-        if (!this.isRunning || !this.chatbotProcess) {
-            throw new Error('Chatbot service is not running');
+        if (!this.chatbotProcess) {
+            throw new Error('Chatbot process not initialized. Please start the chatbot service first.');
+        }
+
+        if (!this.isRunning) {
+            throw new Error('Chatbot service is not running. Process may have crashed or failed to start.');
+        }
+
+        if (this.chatbotProcess.killed || this.chatbotProcess.exitCode !== null) {
+            throw new Error('Chatbot process has terminated unexpectedly. Please restart the service.');
         }
 
         // Determine which mode to use

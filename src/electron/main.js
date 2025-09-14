@@ -107,6 +107,40 @@ ipcMain.handle('start-meeting', async (event, meetingData) => {
     await whisperService.start();
     console.log('Whisper transcription started');
 
+    // Initialize and start chatbot service automatically
+    if (!chatbotService) {
+      console.log('Initializing chatbot service');
+      chatbotService = new ChatbotService();
+
+      // Set up chatbot event handlers
+      chatbotService.setOnResponseCallback((response, isStreaming) => {
+        if (mainWindow) {
+          mainWindow.webContents.send('chatbot-response', { response, isStreaming });
+        }
+      });
+
+      chatbotService.setOnErrorCallback((error) => {
+        if (mainWindow) {
+          mainWindow.webContents.send('chatbot-error', error.message);
+        }
+      });
+
+      chatbotService.setOnStatusCallback((status) => {
+        if (mainWindow) {
+          mainWindow.webContents.send('chatbot-status', status);
+        }
+      });
+    }
+
+    // Start chatbot service
+    try {
+      await chatbotService.start();
+      console.log('Chatbot service started');
+    } catch (chatbotError) {
+      console.error('Failed to start chatbot service:', chatbotError);
+      // Don't fail the entire meeting start if chatbot fails
+    }
+
     return { success: true, meetingId: Date.now() };
   } catch (error) {
     console.error('Failed to start Whisper transcription:', error);
@@ -121,6 +155,17 @@ ipcMain.handle('stop-meeting', async (event) => {
     if (whisperService && whisperService.isServiceRunning()) {
       await whisperService.stop();
       console.log('Whisper transcription stopped');
+    }
+
+    // Stop chatbot service
+    if (chatbotService) {
+      try {
+        await chatbotService.stop();
+        console.log('Chatbot service stopped');
+      } catch (chatbotError) {
+        console.error('Failed to stop chatbot service:', chatbotError);
+        // Don't fail the entire meeting stop if chatbot fails
+      }
     }
 
     return { success: true };
@@ -251,6 +296,9 @@ ipcMain.handle('get-full-transcript', async (event) => {
  * App Event Handlers
  */
 
+// Disable hardware acceleration to prevent GPU process crashes on Windows
+app.disableHardwareAcceleration();
+
 // App ready event
 app.whenReady().then(() => {
   createWindow();
@@ -271,6 +319,15 @@ app.on('window-all-closed', async () => {
       await whisperService.stop();
     } catch (error) {
       console.error('Error stopping Whisper service on app quit:', error);
+    }
+  }
+
+  // Clean up Chatbot service
+  if (chatbotService) {
+    try {
+      await chatbotService.stop();
+    } catch (error) {
+      console.error('Error stopping Chatbot service on app quit:', error);
     }
   }
 

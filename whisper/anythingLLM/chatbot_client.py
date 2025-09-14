@@ -20,10 +20,9 @@ class ChatbotClient:
         self.stream_timeout = config["stream_timeout"]
         self.workspace_slug = config["workspace_slug"]
 
-        if self.stream:
-            self.chat_url = f"{self.base_url}/v1/workspace/{self.workspace_slug}/stream-chat"
-        else:
-            self.chat_url = f"{self.base_url}/v1/workspace/{self.workspace_slug}/chat"
+        # Set URLs for both streaming and non-streaming modes
+        self.chat_url = f"{self.base_url}/v1/workspace/{self.workspace_slug}/chat"
+        self.stream_chat_url = f"{self.base_url}/v1/workspace/{self.workspace_slug}/stream-chat"
 
         self.headers = {
             "accept": "application/json",
@@ -92,18 +91,21 @@ class ChatbotClient:
         # Get live context
         live_context = self._get_live_context()
 
-        # Enhance message with context if available
+        # Create attachments array with transcript if available
+        attachments = []
         if live_context.strip():
-            enhanced_message = f"""Meeting Context (Live Transcript):
-{live_context}
-
-User Question: {message}"""
-        else:
-            enhanced_message = message
+            attachments.append({
+                "name": "meeting_transcript.txt",
+                "mime": "text/plain",
+                "contentString": live_context
+            })
 
         data = {
-            "message": enhanced_message,
-            "mode": "query"
+            "message": message,
+            "mode": "query",
+            "sessionId": "scrum-meeting-session",
+            "attachments": attachments,
+            "reset": False
         }
         try:
             chat_response = requests.post(
@@ -111,16 +113,29 @@ User Question: {message}"""
                 headers=self.headers,
                 json=data
             )
+
+            # Check if request was successful
+            if chat_response.status_code != 200:
+                return f"API request failed with status {chat_response.status_code}: {chat_response.text}"
+
             response_text = chat_response.text.strip()
+
+            # Debug logging
+            print(f"[DEBUG] Raw response: {repr(response_text[:200])}", file=sys.stderr)
 
             # Handle streaming response format
             if response_text.startswith('data: '):
                 response_text = response_text[6:].strip()
 
-            response_data = json.loads(response_text)
-            return response_data.get('textResponse', str(response_data))
-        except ValueError:
-            return f"Response is not valid JSON. Raw response: {chat_response.text if 'chat_response' in locals() else 'No response'}"
+            # Parse JSON response
+            try:
+                response_data = json.loads(response_text)
+                return response_data.get('textResponse', str(response_data))
+            except json.JSONDecodeError as json_err:
+                return f"Invalid JSON response. Error: {json_err}. Raw response: {response_text[:500]}"
+
+        except requests.RequestException as req_err:
+            return f"Request failed. Error: {req_err}"
         except Exception as e:
             return f"Chat request failed. Error: {e}"
 
@@ -131,7 +146,10 @@ User Question: {message}"""
         """
         data = {
             "message": message,
-            "mode": "query"
+            "mode": "query",
+            "sessionId": "scrum-meeting-session",
+            "attachments": [],
+            "reset": False
         }
         try:
             chat_response = requests.post(
@@ -139,16 +157,29 @@ User Question: {message}"""
                 headers=self.headers,
                 json=data
             )
+
+            # Check if request was successful
+            if chat_response.status_code != 200:
+                return f"API request failed with status {chat_response.status_code}: {chat_response.text}"
+
             response_text = chat_response.text.strip()
+
+            # Debug logging
+            print(f"[DEBUG] RAG Raw response: {repr(response_text[:200])}", file=sys.stderr)
 
             # Handle streaming response format
             if response_text.startswith('data: '):
                 response_text = response_text[6:].strip()
 
-            response_data = json.loads(response_text)
-            return response_data.get('textResponse', str(response_data))
-        except ValueError:
-            return f"Response is not valid JSON. Raw response: {chat_response.text if 'chat_response' in locals() else 'No response'}"
+            # Parse JSON response
+            try:
+                response_data = json.loads(response_text)
+                return response_data.get('textResponse', str(response_data))
+            except json.JSONDecodeError as json_err:
+                return f"Invalid JSON response. Error: {json_err}. Raw response: {response_text[:500]}"
+
+        except requests.RequestException as req_err:
+            return f"Request failed. Error: {req_err}"
         except Exception as e:
             return f"Chat request failed. Error: {e}"
 
@@ -158,7 +189,10 @@ User Question: {message}"""
         """
         data = {
             "message": message,
-            "mode": "query"
+            "mode": "query",
+            "sessionId": "scrum-meeting-session",
+            "attachments": [],
+            "reset": False
         }
 
         response_text = ""
@@ -169,7 +203,7 @@ User Question: {message}"""
             buffer = ""
             try:
                 async with httpx.AsyncClient(timeout=self.stream_timeout) as client:
-                    async with client.stream("POST", self.chat_url, headers=self.headers, json=data) as response:
+                    async with client.stream("POST", self.stream_chat_url, headers=self.headers, json=data) as response:
                         async for chunk in response.aiter_text():
                             if chunk:
                                 buffer += chunk
