@@ -18,6 +18,12 @@ The application uses environment variables to securely manage API keys and confi
 - `SUPABASE_URL`: Your Supabase project URL
 - `SUPABASE_ANON_KEY`: Your Supabase anonymous key
 
+### GitHub Integration
+
+- `GITHUB_TOKEN`: Your GitHub personal access token
+- `GITHUB_OWNER`: GitHub username or organization name (optional, defaults to 'anshul-kumar1')
+- `GITHUB_REPO`: Repository name (optional, defaults to 'scrumAI')
+
 ## Setup Instructions
 
 ### 1. Create Environment File
@@ -32,6 +38,11 @@ NOTION_PARENT_PAGE_ID=your_notion_parent_page_id_here
 # Supabase Configuration
 SUPABASE_URL=your_supabase_url_here
 SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# GitHub Configuration
+GITHUB_TOKEN=your_github_token_here
+GITHUB_OWNER=your_github_username_or_org
+GITHUB_REPO=your_repository_name
 ```
 
 ### 2. Replace Placeholder Values
@@ -42,6 +53,9 @@ Replace the placeholder values with your actual credentials:
 - **Notion Parent Page ID**: Extract from the URL of the page where you want to create new pages
 - **Supabase URL**: Found in your Supabase project settings
 - **Supabase Anon Key**: Found in your Supabase project API settings
+- **GitHub Token**: Create a personal access token in GitHub settings with repo permissions
+- **GitHub Owner**: Your GitHub username or organization name
+- **GitHub Repo**: The repository name where issues will be created
 
 ### 3. Security Notes
 

@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Environment variables (securely exposed)
   getEnvVar: (key) => {
     // Only expose specific environment variables for security
-    const allowedKeys = ['NOTION_API_KEY', 'NOTION_PARENT_PAGE_ID', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+    const allowedKeys = ['NOTION_API_KEY', 'NOTION_PARENT_PAGE_ID', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'GITHUB_TOKEN', 'GITHUB_OWNER', 'GITHUB_REPO'];
     if (allowedKeys.includes(key)) {
       return process.env[key];
     }
