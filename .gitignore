@@ -3,3 +3,4 @@ node_modules
 *.onnx
 whisper/models
 models
+config.env

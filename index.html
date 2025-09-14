@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScrumAI - Your Intelligent Meeting Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-dark: #0D0D0D;
+            --background-light: #1A1A1A;
+            --primary-blue: #3B82F6;
+            --primary-cyan: #22D3EE;
+            --text-primary: #FFFFFF;
+            --text-secondary: #9CA3AF;
+            --border-color: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* Header */
+        .app-header {
+            padding: 24px 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            width: 32px;
+            height: 32px;
+        }
+
+        .logo-section h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .header-cta a {
+            padding: 10px 20px;
+            background: var(--primary-blue);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .header-cta a:hover {
+            background: #2563EB;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: calc(100vh - 89px);
+            align-items: center;
+        }
+
+        .hero-text {
+            padding-right: 60px;
+        }
+
+        .hero-text h2 {
+            font-size: 52px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 24px;
+        }
+
+        .hero-text p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 450px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary-cyan) 0%, var(--primary-blue) 100%);
+            color: var(--text-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+        
+        .hero-logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #10101A;
+            height: 100%;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+        }
+        
+        .main-logo-svg {
+            width: 200px;
+            height: 200px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 0.5em;
+            color: var(--text-secondary);
+            background: linear-gradient(90deg, var(--primary-cyan) 0%, var(--primary-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="src/assets/icon.png" alt="ScrumAI Logo" class="app-logo">
+                    <h1>ScrumAI</h1>
+                </div>
+                <nav class="nav-links">
+                    <a href="#">Features</a>
+                    <a href="#">About</a>
+                    <a href="#">Contact</a>
+                </nav>
+                <div class="header-cta">
+                    <a href="#">Get Started</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="hero-text">
+                <h2>Your Intelligent Meeting Assistant</h2>
+                <p>ScrumAI captures, transcribes, and analyzes your meetings, so you can focus on what matters.</p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary">Download the App</a>
+                    <a href="#" class="btn btn-secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-logo">
+                <div class="logo-container">
+                    <svg class="main-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:var(--primary-cyan);stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:var(--primary-blue);stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M 80 20 L 80 80 L 20 80" stroke="url(#logoGradient)" stroke-width="2" fill="none" />
+                        <text x="50" y="58" font-family="Inter, sans-serif" font-size="40" font-weight="500" fill="white" text-anchor="middle">S</text>
+                    </svg>
+                    <div class="logo-text">SCRUM.AI</div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

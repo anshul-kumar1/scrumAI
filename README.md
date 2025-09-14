@@ -1,91 +1,83 @@
-# ScrumAI Meeting Assistant
+# ScrumAI - Intelligent Meeting Assistant
 
-> **AI-powered meeting productivity tool built with Electron**
-
-ScrumAI transforms your meetings into actionable insights through real-time AI processing, automatic transcription, and intelligent content management.
+**AI-powered meeting productivity platform with real-time transcription and intelligent chat assistance**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Electron](https://img.shields.io/badge/Electron-27.0.0-blue.svg)](https://electronjs.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org/)
+
+**Built for Qualcomm Hackathon NYU 2025**
+
+## Overview
+
+ScrumAI transforms meeting productivity by combining real-time speech recognition with conversational AI assistance. The platform integrates OpenAI Whisper for precise transcription with AnythingLLM for contextual chat interactions, creating a comprehensive meeting intelligence solution.
 
 ## Core Features
 
-### Real-Time Meeting Processing
+### Real-Time Meeting Intelligence
+- **Live Audio Transcription**: OpenAI Whisper integration for industry-leading accuracy
+- **Instant Keyword Extraction**: AI-powered identification of key discussion points
+- **Audio Visualization**: Dynamic waveform display and level indicators
+- **Meeting Timer**: Automatic session tracking and duration monitoring
 
-- **Live Audio Capture**: High-quality microphone input with Web Audio API
-- **Real-Time Transcription**: Powered by OpenAI Whisper for accurate speech-to-text
-- **Smart Keyword Extraction**: Automatically identifies and prioritizes important terms
-- **Audio Visualization**: Dynamic audio level indicators and waveform display
+### AI Chat Integration (NEW)
+- **AnythingLLM Assistant**: Conversational AI with meeting context awareness
+- **RAG-Powered Queries**: Ask complex questions about your meeting content
+- **Live Context Access**: Chat assistant has real-time access to transcript data
+- **Intelligent Query Routing**: Automatic detection of complex vs simple queries
+- **Streaming Responses**: Real-time AI response generation
+- **Document Indexing**: Automatic transcript upload for enhanced retrieval
 
-### AI-Powered Insights
-
-- **Sentiment Analysis**: Real-time mood and engagement tracking
-- **Topic Classification**: Intelligent categorization of discussion topics
-- **Action Item Detection**: Automatic identification of tasks and decisions
-- **Meeting Summaries**: Comprehensive notes and strategy summaries
-
-### Content Management
-
-- **Editable Notes**: Full editing capabilities for meeting content
-- **Export Integration**: Seamless export to Notion and GitHub
-- **Live & Post-Meeting Modes**: Real-time tracking and comprehensive analysis
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+### Export Capabilities
+- **Notion Integration**: Direct export of meeting notes and summaries
+- **GitHub Integration**: Automatic issue creation from action items
+- **Local Storage**: Timestamped transcript files
+- **Multi-Format Output**: Text, JSON, and structured data exports
 
 ## Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Electron      │    │   Renderer      │    │   Python        │
-│   Main Process  │◄──►│   Process       │◄──►│   AI Subprocess │
-│                 │    │                 │    │                 │
-│ • Window Mgmt   │    │ • UI Rendering  │    │ • Whisper STT   │
-│ • IPC Bridge    │    │ • Audio Capture │    │ • NLP Processing│
-│ • Python Spawn  │    │ • User Input    │    │ • Sentiment AI  │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │
-         ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐
-│   Supabase      │    │   External APIs │
-│   Database      │    │ • Notion        │
-│ • Auth          │    │ • GitHub        │
-│ • Real-time     │    │ • Integrations  │
-└─────────────────┘    └─────────────────┘
+User Interface (Electron Renderer)
+    ↓
+Main Process (Node.js + IPC)
+    ↓
+AI Processing Layer (Python)
+    ├── Whisper Engine (Real-time STT)
+    ├── AnythingLLM (RAG System + Chat API)
+    └── Meeting Analysis (NLP Processing)
+    ↓
+Data Storage (Local Files + External APIs)
 ```
 
-### Tech Stack
+### Technology Stack
 
-- **Frontend**: Electron 27.0.0, Vanilla JavaScript, HTML5, CSS3
-- **Backend**: Node.js (Electron main process)
-- **AI/ML**: Python 3.10+, PyTorch, OpenAI Whisper, Transformers
-- **Database**: Supabase (PostgreSQL) with real-time subscriptions
-- **Audio**: Web Audio API, node-record-lpcm16, speaker
-- **Build**: electron-builder for cross-platform distribution
+**Frontend**: Electron 27.0.0, Vanilla JavaScript, Web Audio API  
+**AI/ML**: OpenAI Whisper (ONNX), AnythingLLM, PyTorch, Transformers  
+**Backend**: Node.js, Python 3.10+, IPC Communication  
 
 ## Quick Start
 
 ### Prerequisites
-
-- **Node.js** 18+ (LTS recommended)
-- **Python** 3.10+
-- **Git** for version control
+- Node.js 18+ (LTS recommended)
+- Python 3.10+ with pip
+- Git for version control
+- Microphone for audio capture
 
 ### Installation
 
 1. **Clone the repository**
-
    ```bash
    git clone https://github.com/anshul-kumar1/scrumAI.git
    cd scrumAI
    ```
 
 2. **Install dependencies**
-
    ```bash
    npm install
    npm run setup-python
    ```
 
 3. **Configure environment variables**
-
    ```bash
    cp config.env.example config.env
    # Edit config.env with your API keys
@@ -97,7 +89,6 @@ ScrumAI transforms your meetings into actionable insights through real-time AI p
    ```
 
 ### Development Mode
-
 ```bash
 npm run dev  # Starts with DevTools open
 ```
@@ -113,73 +104,125 @@ Create a `config.env` file in the project root:
 NOTION_API_KEY=your_notion_api_key_here
 NOTION_PARENT_PAGE_ID=your_notion_parent_page_id_here
 
-# Supabase Configuration
-SUPABASE_URL=your_supabase_url_here
-SUPABASE_ANON_KEY=your_supabase_anon_key_here
-
 # GitHub Configuration
 GITHUB_TOKEN=your_github_token_here
 GITHUB_OWNER=your_github_username_or_org
 GITHUB_REPO=your_repository_name
 ```
 
+### AnythingLLM Setup
+
+Configure AnythingLLM integration in `whisper/anythingLLM/config.yaml`:
+
+```yaml
+# AnythingLLM Configuration
+api_key: "your_anythingllm_api_key"
+model_server_base_url: "http://localhost:3001/api"
+workspace_slug: "your_workspace_name"
+stream: true
+stream_timeout: 30
+```
+
 ### API Setup
 
-#### Notion Integration
-
+**Notion Integration**
 1. Create a [Notion integration](https://www.notion.so/my-integrations)
 2. Copy the API key to `NOTION_API_KEY`
-3. Share a page with your integration and copy the page ID to `NOTION_PARENT_PAGE_ID`
+3. Share a page with your integration and copy the page ID
 
-#### Supabase Setup
-
-1. Create a [Supabase project](https://supabase.com/dashboard)
-2. Copy the project URL and anon key to your config
-
-#### GitHub Integration
-
+**GitHub Integration**
 1. Create a [GitHub personal access token](https://github.com/settings/tokens)
-2. Grant `repo` permissions
-3. Add token and repository details to config
+2. Grant `repo` permissions for issue creation
 
-## Build & Distribution
+**AnythingLLM Setup**
+1. Install and run [AnythingLLM](https://anythingllm.com/)
+2. Create a workspace and obtain API key
+3. Update the config file with your local AnythingLLM instance details
 
-### Development Build
-
-```bash
-npm run build
-```
-
-### Platform-Specific Builds
-
-```bash
-npm run build:win    # Windows (NSIS installer)
-npm run build:mac    # macOS (DMG)
-npm run build:linux  # Linux (AppImage)
-```
-
-## Usage
+## Usage Guide
 
 ### Starting a Meeting
 
-1. Click **"Start Meeting"** to begin audio capture
-2. Speak naturally - the app processes audio in real-time
-3. Watch keywords and transcript appear live
-4. Click **"Stop Meeting"** when finished
+1. Launch ScrumAI and grant microphone permissions
+2. Click the "Start Meeting" button
+3. Begin speaking - real-time transcription starts immediately
+4. Monitor live transcript, keywords, and audio visualization
+5. Use the Chat tab to ask questions about the meeting
 
-### Post-Meeting Analysis
+### Using the AI Chat Assistant
 
-1. Review automatically generated meeting notes
-2. Edit content as needed using the built-in editor
-3. Export to Notion for documentation
-4. Create GitHub issues for action items
+**Simple Queries** (Live Context)
+- "What did we just discuss about the authentication system?"
+- "Who is taking lead on the API development?"
+- "What was the last action item mentioned?"
 
-### Keyboard Shortcuts
+**Complex Analysis** (RAG-Powered)
+- "Summarize the key decisions made in this meeting"
+- "What are the main technical challenges identified?"
+- "Create a list of all action items with assigned owners"
+- "Analyze the sentiment of the discussion about the Q2 release"
 
-- `Space`: Toggle mute/unmute
-- `Ctrl/Cmd + S`: Save current content
-- `Ctrl/Cmd + E`: Export to external service
-- `Escape`: Close modals/dialogs
+The system automatically determines whether to use live context or RAG based on query complexity.
+
+### Post-Meeting Workflow
+
+1. Review content using transcript and keywords tabs
+2. Ask the chat assistant for summaries and insights
+3. Edit and refine transcript or AI-generated content
+4. Export to Notion for documentation or GitHub for issue tracking
+5. Automatic local backup with timestamp
+
+## Build & Distribution
+
+```bash
+npm run build         # Development build
+npm run build:win     # Windows (NSIS installer)
+npm run build:mac     # macOS (DMG)
+npm run build:linux   # Linux (AppImage)
+```
+
+## Project Structure
+
+```
+scrumAI/
+├── src/
+│   ├── electron/              # Main Electron process
+│   ├── renderer/              # Frontend application
+│   │   ├── js/                # JavaScript modules
+│   │   │   ├── chat-controller.js  # AnythingLLM chat interface
+│   │   │   └── audio-manager.js    # Web Audio API integration
+│   │   └── index.html         # Main UI structure
+│   └── services/              # Backend services
+│       ├── whisperService.js  # Whisper transcription service
+│       └── chatbotService.js  # AnythingLLM chatbot service
+├── whisper/                   # AI processing layer
+│   ├── anythingLLM/          # AnythingLLM integration
+│   │   ├── chatbot_client.py  # Python AnythingLLM client
+│   │   └── config.yaml        # LLM configuration
+│   ├── meeting_transcriber.py # Enhanced transcriber with LLM
+│   └── models/               # ONNX model files
+└── config.env               # Environment configuration
+```
+
+## Troubleshooting
+
+**Audio not working:**
+- Verify microphone permissions in system settings
+- Ensure no other applications are using the microphone
+
+**Python AI processing fails:**
+- Confirm Python 3.10+ installation: `python --version`
+- Reinstall dependencies: `npm run setup-python`
+
+**AnythingLLM chat not responding:**
+- Verify AnythingLLM service is running on localhost:3001
+- Check API key configuration in `whisper/anythingLLM/config.yaml`
+- Ensure workspace exists and is accessible
+
+**Export features not working:**
+- Validate API keys in `config.env`
+- Test internet connectivity
+- Verify service permissions (Notion, GitHub)
 
 ## Testing
 
@@ -196,53 +239,6 @@ npm run lint    # Code quality check
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## Project Structure
-
-```
-scrumAI/
-├── src/
-│   ├── electron/           # Main Electron process
-│   │   ├── main.js         # Application entry point
-│   │   └── preload.js      # Security bridge
-│   ├── renderer/           # Frontend application
-│   │   ├── auth/           # Authentication system
-│   │   ├── js/             # JavaScript modules
-│   │   ├── styles/         # CSS styling
-│   │   └── index.html      # Main UI
-│   ├── python/             # AI processing layer
-│   │   └── ai-env/         # Python virtual environment
-│   └── assets/             # Static resources
-├── cursor_rules/           # Development guidelines
-├── config.env             # Environment configuration
-└── package.json           # Dependencies and scripts
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**Audio not working:**
-
-- Check microphone permissions
-- Ensure audio device is not being used by another application
-
-**Python AI processing fails:**
-
-- Verify Python 3.10+ installation
-- Run `npm run setup-python` to reinstall dependencies
-
-**Export features not working:**
-
-- Verify API keys in `config.env`
-- Check internet connection
-- Ensure proper permissions for external services
-
-**Application won't start:**
-
-- Clear `node_modules` and run `npm install`
-- Check Node.js version compatibility
-- Verify all environment variables are set
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -252,7 +248,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Qualcomm** for the hackathon opportunity
 - **NYU** for hosting the event
 - **OpenAI Whisper** for speech recognition capabilities
-- **Supabase** for backend infrastructure
+- **AnythingLLM** for conversational AI platform
 - **Notion** and **GitHub** for integration APIs
 
 ---
