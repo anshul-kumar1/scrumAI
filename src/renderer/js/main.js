@@ -110,6 +110,24 @@ class ScrumAIApp {
             this.exportToNotion('strategy');
         });
         
+        // Edit/Save buttons for meeting notes
+        document.getElementById('edit-notes-btn').addEventListener('click', () => {
+            this.toggleEditMode('notes');
+        });
+        
+        document.getElementById('save-notes-btn').addEventListener('click', () => {
+            this.saveContent('notes');
+        });
+        
+        // Edit/Save buttons for strategy
+        document.getElementById('edit-strategy-btn').addEventListener('click', () => {
+            this.toggleEditMode('strategy');
+        });
+        
+        document.getElementById('save-strategy-btn').addEventListener('click', () => {
+            this.saveContent('strategy');
+        });
+        
         // Window events
         window.addEventListener('beforeunload', () => {
             this.cleanup();
@@ -326,6 +344,10 @@ class ScrumAIApp {
         this.generateMeetingNotes();
         this.generateStrategy();
         
+        // Load any previously saved content
+        this.loadSavedContent('notes');
+        this.loadSavedContent('strategy');
+        
         console.log('Transitioned to post-meeting state');
     }
 
@@ -355,6 +377,13 @@ class ScrumAIApp {
      */
     generateMeetingNotes() {
         const notesContent = document.getElementById('notes-content');
+        
+        // Check if there's already saved content
+        const savedContent = localStorage.getItem('scrumAI_notes_content');
+        if (savedContent) {
+            return; // Don't overwrite saved content
+        }
+        
         const mockNotes = `
 ## Meeting Summary
 **Date:** ${new Date().toLocaleDateString()}
@@ -393,6 +422,13 @@ class ScrumAIApp {
      */
     generateStrategy() {
         const strategyContent = document.getElementById('strategy-content');
+        
+        // Check if there's already saved content
+        const savedContent = localStorage.getItem('scrumAI_strategy_content');
+        if (savedContent) {
+            return; // Don't overwrite saved content
+        }
+        
         const mockStrategy = `
 ## Strategic Outcomes & Next Steps
 
@@ -448,6 +484,70 @@ class ScrumAIApp {
         `.trim();
         
         strategyContent.innerHTML = `<pre style="white-space: pre-wrap; margin: 0; font-family: inherit; font-size: 14px; line-height: 1.6;">${mockStrategy}</pre>`;
+    }
+
+    /**
+     * Toggle edit mode for content sections
+     */
+    toggleEditMode(contentType) {
+        const contentElement = document.getElementById(`${contentType}-content`);
+        const editBtn = document.getElementById(`edit-${contentType}-btn`);
+        const saveBtn = document.getElementById(`save-${contentType}-btn`);
+        
+        const isCurrentlyEditable = contentElement.getAttribute('contenteditable') === 'true';
+        
+        if (isCurrentlyEditable) {
+            // Switch to read-only mode
+            contentElement.setAttribute('contenteditable', 'false');
+            editBtn.innerHTML = '<span class="btn-icon">✏️</span>Edit';
+            saveBtn.classList.add('hidden');
+            console.log(`${contentType} edit mode disabled`);
+        } else {
+            // Switch to edit mode
+            contentElement.setAttribute('contenteditable', 'true');
+            contentElement.focus();
+            editBtn.innerHTML = '<span class="btn-icon">👁️</span>View';
+            saveBtn.classList.remove('hidden');
+            console.log(`${contentType} edit mode enabled`);
+        }
+    }
+    
+    /**
+     * Save content changes
+     */
+    saveContent(contentType) {
+        const contentElement = document.getElementById(`${contentType}-content`);
+        const saveBtn = document.getElementById(`save-${contentType}-btn`);
+        
+        // Get the current content
+        const content = contentElement.innerHTML;
+        
+        // Save to local storage or send to backend
+        localStorage.setItem(`scrumAI_${contentType}_content`, content);
+        
+        // Show success feedback
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<span class="btn-icon">✅</span>Saved!';
+        saveBtn.disabled = true;
+        
+        setTimeout(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }, 2000);
+        
+        console.log(`${contentType} content saved successfully`);
+    }
+    
+    /**
+     * Load saved content from storage
+     */
+    loadSavedContent(contentType) {
+        const savedContent = localStorage.getItem(`scrumAI_${contentType}_content`);
+        if (savedContent) {
+            const contentElement = document.getElementById(`${contentType}-content`);
+            contentElement.innerHTML = savedContent;
+            console.log(`Loaded saved ${contentType} content`);
+        }
     }
 
     /**
