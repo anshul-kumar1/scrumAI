@@ -10,6 +10,7 @@
  */
 
 import { UIController } from './ui-controller.js';
+import { notionIntegration } from './notion-integration.js';
 
 class ScrumAIApp {
     constructor() {
@@ -20,13 +21,21 @@ class ScrumAIApp {
         
         // Component instances
         this.uiController = null;
+        this.notionIntegration = notionIntegration;
+        
+        // Notion API credentials
+        this.notionConfig = {
+            apiKey: "ntn_b21836603815tHxhJd8M44AeLsp2bAHgpqbmNVnlMaE3Sg",
+            parentPageId: "26e08228035d805ca45ac47eac1b3849"
+        };
         
         // Application state
         this.state = {
             isMeetingActive: false,
             isMuted: false,
             participants: [],
-            activeTab: 'keywords'
+            activeTab: 'keywords',
+            isPostMeeting: false
         };
     }
 
@@ -63,6 +72,18 @@ class ScrumAIApp {
         this.uiController = new UIController();
         this.uiController.init();
         
+        // Initialize Notion integration
+        try {
+            await this.notionIntegration.initialize(
+                this.notionConfig.apiKey,
+                this.notionConfig.parentPageId
+            );
+            console.log('Notion integration ready');
+        } catch (error) {
+            console.warn('Notion integration failed to initialize:', error.message);
+            // Continue without Notion integration
+        }
+        
         // Make UI controller globally accessible for keyword tooltips
         window.uiController = this.uiController;
     }
@@ -91,13 +112,44 @@ class ScrumAIApp {
             });
         });
         
-        // Export functionality
-        document.getElementById('export-content').addEventListener('click', () => {
-            this.exportContent();
-        });
-        
         document.getElementById('clear-content').addEventListener('click', () => {
             this.clearContent();
+        });
+        
+        // Notion export buttons
+        document.getElementById('export-notes-notion').addEventListener('click', () => {
+            this.exportToNotion('notes');
+        });
+        
+        document.getElementById('export-strategy-notion').addEventListener('click', () => {
+            this.exportToNotion('strategy');
+        });
+        
+        // GitHub export buttons
+        document.getElementById('export-notes-github').addEventListener('click', () => {
+            this.exportToGitHub('notes');
+        });
+        
+        document.getElementById('export-strategy-github').addEventListener('click', () => {
+            this.exportToGitHub('strategy');
+        });
+        
+        // Edit/Save buttons for meeting notes
+        document.getElementById('edit-notes-btn').addEventListener('click', () => {
+            this.toggleEditMode('notes');
+        });
+        
+        document.getElementById('save-notes-btn').addEventListener('click', () => {
+            this.saveContent('notes');
+        });
+        
+        // Edit/Save buttons for strategy
+        document.getElementById('edit-strategy-btn').addEventListener('click', () => {
+            this.toggleEditMode('strategy');
+        });
+        
+        document.getElementById('save-strategy-btn').addEventListener('click', () => {
+            this.saveContent('strategy');
         });
         
         // Window events
@@ -132,6 +184,11 @@ class ScrumAIApp {
             this.currentMeeting = meetingData;
             this.meetingStartTime = Date.now();
             this.state.isMeetingActive = true;
+            
+            // Reset to live meeting state if coming from post-meeting
+            if (this.state.isPostMeeting) {
+                this.resetToLiveMeeting();
+            }
             
             // Update UI
             this.updateMeetingStatus(true);
@@ -181,6 +238,9 @@ class ScrumAIApp {
             // Update UI
             this.updateMeetingStatus(false);
             this.stopMeetingTimer();
+            
+            // Transition to post-meeting state
+            this.transitionToPostMeeting();
             
             console.log('Meeting stopped successfully');
             
@@ -287,13 +347,373 @@ class ScrumAIApp {
         console.log(`Switched to ${tabName} tab`);
     }
 
-    exportContent() {
-        if (this.state.activeTab === 'keywords') {
-            const transcription = this.uiController.getTranscriptionText();
-            console.log('Exporting keywords:', transcription);
-        } else if (this.state.activeTab === 'transcript') {
-            const transcript = document.getElementById('transcript-content').textContent;
-            console.log('Exporting transcript:', transcript);
+    /**
+     * Transition to post-meeting state
+     */
+    transitionToPostMeeting() {
+        this.state.isPostMeeting = true;
+        
+        // Hide live meeting tabs and content
+        document.querySelector('.live-tabs').classList.add('hidden');
+        document.querySelector('.live-content').classList.add('hidden');
+        
+        // Show post-meeting tabs and content
+        document.querySelector('.post-meeting-tabs').classList.remove('hidden');
+        document.querySelector('.post-meeting-content').classList.remove('hidden');
+        
+        // Set default active tab to notes
+        this.state.activeTab = 'notes';
+        
+        // Generate post-meeting content
+        this.generateMeetingNotes();
+        this.generateStrategy();
+        
+        // Load any previously saved content
+        this.loadSavedContent('notes');
+        this.loadSavedContent('strategy');
+        
+        console.log('Transitioned to post-meeting state');
+    }
+
+    /**
+     * Reset to live meeting state
+     */
+    resetToLiveMeeting() {
+        this.state.isPostMeeting = false;
+        
+        // Show live meeting tabs and content
+        document.querySelector('.live-tabs').classList.remove('hidden');
+        document.querySelector('.live-content').classList.remove('hidden');
+        
+        // Hide post-meeting tabs and content
+        document.querySelector('.post-meeting-tabs').classList.add('hidden');
+        document.querySelector('.post-meeting-content').classList.add('hidden');
+        
+        // Reset to keywords tab
+        this.state.activeTab = 'keywords';
+        this.switchTab('keywords');
+        
+        console.log('Reset to live meeting state');
+    }
+
+    /**
+     * Generate meeting notes from transcript and keywords
+     */
+    generateMeetingNotes() {
+        const notesContent = document.getElementById('notes-content');
+        
+        // Check if there's already saved content
+        const savedContent = localStorage.getItem('scrumAI_notes_content');
+        if (savedContent) {
+            return; // Don't overwrite saved content
+        }
+        
+        const mockNotes = `
+## Meeting Summary
+**Date:** ${new Date().toLocaleDateString()}
+**Duration:** ${this.formatDuration(this.currentMeeting?.duration || 300000)}
+**Participants:** John Smith, Sarah Johnson, Mike Chen, Alex Rodriguez
+
+### Key Discussion Points
+• **Project Timeline Review**: Discussed current sprint velocity (32 story points) and planned capacity for next sprint (35-38 story points)
+• **User Authentication System**: Identified as top priority for Q2 release
+• **Client Dashboard Improvements**: Reviewed wireframes and new layout designs
+• **Technical Requirements**: Updated documentation and database migration scripts
+
+### Decisions Made
+1. **Sprint Capacity**: Agreed to target 35-38 story points for next sprint
+2. **Authentication Lead**: Alex Rodriguez to lead API development
+3. **Frontend Integration**: Mike Chen to handle UI components
+4. **QA Coordination**: John Smith to schedule meeting with QA team
+
+### Key Insights
+• Team velocity has improved due to technical debt cleanup
+• Strong collaboration between team members
+• Focus on maintaining backwards compatibility with existing client data
+• Need for comprehensive testing coordination
+
+### Meeting Metrics
+• **Keywords Discussed:** ${document.getElementById('keyword-count').textContent || 0}
+• **Action Items Generated:** 4
+• **Follow-up Meetings Scheduled:** 1
+        `.trim();
+        
+        notesContent.innerHTML = `<pre style="white-space: pre-wrap; margin: 0; font-family: inherit; font-size: 14px; line-height: 1.6;">${mockNotes}</pre>`;
+    }
+
+    /**
+     * Generate strategy and action items
+     */
+    generateStrategy() {
+        const strategyContent = document.getElementById('strategy-content');
+        
+        // Check if there's already saved content
+        const savedContent = localStorage.getItem('scrumAI_strategy_content');
+        if (savedContent) {
+            return; // Don't overwrite saved content
+        }
+        
+        const mockStrategy = `
+## Strategic Outcomes & Next Steps
+
+### 🎯 Sprint Goals
+**Primary Objective:** Deliver user authentication system for Q2 release
+**Secondary Objectives:** 
+- Complete client dashboard improvements
+- Maintain technical debt reduction momentum
+- Strengthen QA collaboration processes
+
+### 📋 Action Items
+
+#### High Priority (This Week)
+- [ ] **Alex Rodriguez**: Draft authentication API migration scripts
+  - *Due: Tomorrow*
+  - *Impact: Critical for Q2 release*
+
+- [ ] **John Smith**: Schedule QA coordination meeting
+  - *Due: Tomorrow afternoon*
+  - *Impact: Ensures testing coverage*
+
+#### Medium Priority (Next Sprint)
+- [ ] **Mike Chen**: Complete authentication UI components
+  - *Due: End of sprint*
+  - *Dependencies: API completion*
+
+- [ ] **Sarah Johnson**: Review and prioritize remaining user stories
+  - *Due: Sprint planning*
+  - *Impact: Sprint velocity optimization*
+
+### 🚀 Strategic Recommendations
+
+#### Technical Strategy
+1. **Maintain Momentum**: Continue technical debt reduction to sustain improved velocity
+2. **API-First Approach**: Prioritize backend completion before frontend integration
+3. **Testing Integration**: Embed QA processes earlier in development cycle
+
+#### Team Collaboration
+1. **Cross-functional Pairing**: Encourage collaboration between frontend/backend developers
+2. **Regular Check-ins**: Implement daily standups for authentication feature
+3. **Documentation**: Maintain updated technical requirements throughout development
+
+### 📊 Success Metrics
+- **Sprint Velocity Target**: 35-38 story points
+- **Authentication Completion**: 100% by sprint end
+- **Technical Debt Reduction**: Continue 20% allocation
+- **QA Integration**: Zero critical bugs in production
+
+### 🔄 Follow-up Actions
+- **Next Review**: Sprint retrospective
+- **Stakeholder Update**: Weekly progress report to management
+- **Risk Assessment**: Monitor backwards compatibility requirements
+        `.trim();
+        
+        strategyContent.innerHTML = `<pre style="white-space: pre-wrap; margin: 0; font-family: inherit; font-size: 14px; line-height: 1.6;">${mockStrategy}</pre>`;
+    }
+
+    /**
+     * Toggle edit mode for content sections
+     */
+    toggleEditMode(contentType) {
+        const contentElement = document.getElementById(`${contentType}-content`);
+        const editBtn = document.getElementById(`edit-${contentType}-btn`);
+        const saveBtn = document.getElementById(`save-${contentType}-btn`);
+        
+        const isCurrentlyEditable = contentElement.getAttribute('contenteditable') === 'true';
+        
+        if (isCurrentlyEditable) {
+            // Switch to read-only mode
+            contentElement.setAttribute('contenteditable', 'false');
+            editBtn.innerHTML = '<span class="btn-icon">✏️</span>Edit';
+            saveBtn.classList.add('hidden');
+            console.log(`${contentType} edit mode disabled`);
+        } else {
+            // Switch to edit mode
+            contentElement.setAttribute('contenteditable', 'true');
+            contentElement.focus();
+            editBtn.innerHTML = '<span class="btn-icon">👁️</span>View';
+            saveBtn.classList.remove('hidden');
+            console.log(`${contentType} edit mode enabled`);
+        }
+    }
+    
+    /**
+     * Save content changes
+     */
+    saveContent(contentType) {
+        const contentElement = document.getElementById(`${contentType}-content`);
+        const saveBtn = document.getElementById(`save-${contentType}-btn`);
+        
+        // Get the current content
+        const content = contentElement.innerHTML;
+        
+        // Save to local storage or send to backend
+        localStorage.setItem(`scrumAI_${contentType}_content`, content);
+        
+        // Show success feedback
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<span class="btn-icon">✅</span>Saved!';
+        saveBtn.disabled = true;
+        
+        setTimeout(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }, 2000);
+        
+        console.log(`${contentType} content saved successfully`);
+    }
+    
+    /**
+     * Load saved content from storage
+     */
+    loadSavedContent(contentType) {
+        const savedContent = localStorage.getItem(`scrumAI_${contentType}_content`);
+        if (savedContent) {
+            const contentElement = document.getElementById(`${contentType}-content`);
+            contentElement.innerHTML = savedContent;
+            console.log(`Loaded saved ${contentType} content`);
+        }
+    }
+
+    /**
+     * Export content to Notion
+     */
+    async exportToNotion(contentType) {
+        const button = document.getElementById(`export-${contentType}-notion`);
+        const originalText = button.innerHTML;
+        
+        try {
+            // Show loading state
+            button.innerHTML = '<span class="btn-icon">⏳</span>Exporting...';
+            button.disabled = true;
+            
+            // Get content based on type
+            let content;
+            if (contentType === 'notes') {
+                const notesElement = document.getElementById('notes-content');
+                content = notesElement.textContent || notesElement.innerText || '';
+            } else if (contentType === 'strategy') {
+                const strategyElement = document.getElementById('strategy-content');
+                content = strategyElement.textContent || strategyElement.innerText || '';
+            }
+            
+            // Check if Notion integration is ready
+            if (!this.notionIntegration.isInitialized) {
+                throw new Error('Notion integration is not available. Please check your API credentials.');
+            }
+            
+            // Export to Notion
+            console.log(`Exporting ${contentType} to Notion...`);
+            const result = await this.notionIntegration.exportStrategyContent(content);
+            
+            if (result.success) {
+                // Show success message
+                button.innerHTML = '<span class="btn-icon">✅</span>Exported!';
+                
+                // Show success notification with link
+                this.showNotificationWithLink(
+                    `${contentType === 'notes' ? 'Meeting Notes' : 'Strategy & Actions'} exported to Notion successfully!`,
+                    'success',
+                    result.pageUrl
+                );
+                
+                console.log('Successfully exported to Notion:', result.pageUrl);
+            } else {
+                throw new Error('Export failed - no success response from Notion');
+            }
+            
+        } catch (error) {
+            console.error('Failed to export to Notion:', error);
+            
+            // Show error state
+            button.innerHTML = '<span class="btn-icon">❌</span>Failed';
+            
+            // Show error notification
+            this.showNotification(
+                `Failed to export to Notion: ${error.message}`,
+                'error'
+            );
+        } finally {
+            // Reset button after delay
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 3000);
+        }
+    }
+
+    /**
+     * Export content to GitHub as an issue
+     */
+    async exportToGitHub(contentType) {
+        const button = document.getElementById(`export-${contentType}-github`);
+        const originalText = button.innerHTML;
+        
+        try {
+            // Show loading state
+            button.innerHTML = '<span class="btn-icon">⏳</span>Exporting...';
+            button.disabled = true;
+            
+            // Get content based on type
+            let content;
+            if (contentType === 'notes') {
+                const notesElement = document.getElementById('notes-content');
+                content = notesElement.textContent || notesElement.innerText || '';
+            } else if (contentType === 'strategy') {
+                const strategyElement = document.getElementById('strategy-content');
+                content = strategyElement.textContent || strategyElement.innerText || '';
+            }
+            
+            if (!content || content.trim() === '') {
+                throw new Error('No content available to export');
+            }
+            
+            // Parse content - first line as title, rest as body
+            const lines = content.split('\n').filter(line => line.trim() !== '');
+            const title = lines[0] || `${contentType === 'notes' ? 'Meeting Notes' : 'Strategy & Actions'} - ${new Date().toLocaleDateString()}`;
+            const body = lines.slice(1).join('\n') || content;
+            
+            // Check if GitHub API is available
+            if (!window.electronAPI || !window.electronAPI.createGithubIssue) {
+                throw new Error('GitHub integration is not available');
+            }
+            
+            // Export to GitHub
+            console.log(`Exporting ${contentType} to GitHub...`);
+            const result = await window.electronAPI.createGithubIssue({ title, body });
+            
+            if (result.success) {
+                // Show success message
+                button.innerHTML = '<span class="btn-icon">✅</span>Exported!';
+                
+                // Show success notification with link
+                this.showNotificationWithLink(
+                    `${contentType === 'notes' ? 'Meeting Notes' : 'Strategy & Actions'} exported to GitHub successfully!`,
+                    'success',
+                    result.data.issueUrl
+                );
+                
+                console.log('Successfully exported to GitHub:', result.data.issueUrl);
+            } else {
+                throw new Error(result.error || 'Export failed - no success response from GitHub');
+            }
+            
+        } catch (error) {
+            console.error('Failed to export to GitHub:', error);
+            
+            // Show error state
+            button.innerHTML = '<span class="btn-icon">❌</span>Failed';
+            
+            // Show error notification
+            this.showNotification(
+                `Failed to export to GitHub: ${error.message}`,
+                'error'
+            );
+        } finally {
+            // Reset button after delay
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 3000);
         }
     }
 
@@ -388,12 +808,118 @@ class ScrumAIApp {
     }
 
     /**
+     * Show notification message
+     */
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            max-width: 300px;
+            word-wrap: break-word;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        `;
+        notification.textContent = message;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remove after delay
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
+    }
+
+    /**
+     * Show notification with clickable link
+     */
+    showNotificationWithLink(message, type = 'info', url = null) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            max-width: 350px;
+            word-wrap: break-word;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        `;
+        
+        if (url) {
+            notification.innerHTML = `
+                <div>${message}</div>
+                <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">
+                    Click to open in Notion
+                </div>
+            `;
+            notification.addEventListener('click', () => {
+                window.open(url, '_blank');
+            });
+        } else {
+            notification.textContent = message;
+        }
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remove after delay
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 8000); // Longer delay for clickable notifications
+    }
+
+    /**
      * Error handling
      */
     handleError(message, error) {
         console.error(message, error);
         // Show user-friendly error message
-        alert(`${message}: ${error.message || error}`);
+        this.showNotification(`${message}: ${error.message || error}`, 'error');
     }
 
     /**
