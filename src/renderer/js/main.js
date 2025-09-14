@@ -105,11 +105,13 @@ class ScrumAIApp {
             // Listen for auth state changes
             authManager.onAuthChange((event, user) => {
                 this.state.isAuthenticated = event === 'signed-in';
-                this.state.currentUser = user;
+                // Get user from authManager to ensure consistency
+                this.state.currentUser = authManager.getCurrentUser();
                 this.updateConnectionStatus(); // Update all connection statuses
                 
                 if (event === 'signed-in') {
-                    console.log('User signed in:', user.email);
+                    console.log('User signed in:', this.state.currentUser?.email || 'unknown');
+                    console.log('Current user object:', this.state.currentUser);
                 } else if (event === 'signed-out') {
                     console.log('User signed out');
                     // Stop any active meetings
@@ -141,6 +143,9 @@ class ScrumAIApp {
         // Initialize UI controller
         this.uiController = new UIController();
         this.uiController.init();
+        
+        // Make UI controller globally accessible for keyword tooltips
+        window.uiController = this.uiController;
         
         // Set up inter-component communication
         this.setupComponentCommunication();
@@ -191,11 +196,11 @@ class ScrumAIApp {
         });
         
         // Export functionality
-        document.getElementById('export-transcription').addEventListener('click', () => {
+        document.getElementById('export-keywords').addEventListener('click', () => {
             this.exportTranscription();
         });
         
-        document.getElementById('clear-transcription').addEventListener('click', () => {
+        document.getElementById('clear-keywords').addEventListener('click', () => {
             this.clearTranscription();
         });
         
@@ -220,6 +225,10 @@ class ScrumAIApp {
     async startMeeting() {
         try {
             console.log('Starting meeting...');
+            console.log('Current auth state:', {
+                isAuthenticated: this.state.isAuthenticated,
+                currentUser: this.state.currentUser
+            });
             
             // Check authentication
             if (!this.state.isAuthenticated) {
@@ -228,13 +237,27 @@ class ScrumAIApp {
                 return;
             }
             
-            // Create meeting data
+            // Check if currentUser is available
+            if (!this.state.currentUser) {
+                console.error('Cannot start meeting: currentUser is null/undefined');
+                // Try to refresh user state
+                this.state.currentUser = authManager.getCurrentUser();
+                if (!this.state.currentUser) {
+                    console.error('Still no currentUser after refresh, showing auth UI');
+                    authUI.show();
+                    return;
+                }
+            }
+            
+            // Create meeting data with fallbacks
             const meetingData = {
                 title: `Meeting ${new Date().toLocaleString()}`,
-                organizer_id: this.state.currentUser.id,
+                organizer_id: this.state.currentUser?.id || 'unknown',
                 startTime: new Date().toISOString(),
-                participants: [this.state.currentUser.email]
+                participants: [this.state.currentUser?.email || 'unknown@example.com']
             };
+            
+            console.log('Meeting data:', meetingData);
             
             // Start meeting via Electron API
             const result = await window.electronAPI.startMeeting(meetingData);
@@ -254,6 +277,12 @@ class ScrumAIApp {
                 // Update UI
                 this.updateMeetingStatus(true);
                 this.startMeetingTimer();
+                
+                // Initialize mock participants for UI development
+                this.initializeMockParticipants();
+                
+                // Initialize mock keywords for UI development
+                this.uiController.initializeMockKeywords();
                 
                 // Save meeting to database (commented out - no database client)
                 // await this.databaseClient.saveMeeting(this.currentMeeting);
@@ -295,6 +324,10 @@ class ScrumAIApp {
             this.state.isMeetingActive = false;
             this.currentMeeting = null;
             this.meetingStartTime = null;
+            this.state.participants = [];
+            
+            // Clear participants from UI
+            this.uiController.clearParticipants();
             
             // Update UI
             this.updateMeetingStatus(false);
@@ -495,6 +528,39 @@ class ScrumAIApp {
 
     clearTranscription() {
         this.uiController.clearTranscription();
+    }
+
+    /**
+     * Add participant to meeting
+     */
+    addParticipant(participant) {
+        this.state.participants.push(participant);
+        this.uiController.addParticipant(participant);
+        console.log('Participant added:', participant.name);
+    }
+
+    /**
+     * Remove participant from meeting
+     */
+    removeParticipant(participantId) {
+        this.state.participants = this.state.participants.filter(p => p.id !== participantId);
+        this.uiController.removeParticipant(participantId);
+        console.log('Participant removed:', participantId);
+    }
+
+    /**
+     * Initialize mock participants for UI development
+     */
+    initializeMockParticipants() {
+        // Initialize mock participants in UI
+        this.uiController.initializeMockParticipants();
+        
+        // Start activity simulation every 5 seconds for demo purposes
+        setInterval(() => {
+            if (this.state.isMeetingActive) {
+                this.uiController.simulateParticipantActivity();
+            }
+        }, 5000);
     }
 
     /**

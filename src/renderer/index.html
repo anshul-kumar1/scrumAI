@@ -71,13 +71,35 @@
         <div class="content-grid">
             <!-- Live Transcription -->
             <section class="transcription-panel">
-                <h2>Live Transcription</h2>
-                <div id="transcription-container" class="transcription-content">
-                    <p class="placeholder-text">Start a meeting to see live transcription...</p>
+                <h2>Key Topics & Insights</h2>
+                <div class="transcription-header">
+                    <div class="topic-stats">
+                        <span class="stat-item">
+                            <span class="stat-number" id="keyword-count">0</span>
+                            <span class="stat-label">Keywords</span>
+                        </span>
+                        <span class="stat-item">
+                            <span class="stat-number" id="topic-count">0</span>
+                            <span class="stat-label">Topics</span>
+                        </span>
+                    </div>
+                    <button id="view-full-transcript" class="control-btn small secondary">View Full Text</button>
                 </div>
+                
+                <div id="keywords-container" class="keywords-content">
+                    <p class="placeholder-text">Start a meeting to see key topics and insights...</p>
+                </div>
+                
+                <div class="recent-speech">
+                    <h3>Latest Speech</h3>
+                    <div id="recent-speech-text" class="recent-text">
+                        <p class="placeholder-text">Recent words will appear here...</p>
+                    </div>
+                </div>
+                
                 <div class="transcription-controls">
-                    <button id="clear-transcription" class="control-btn small">Clear</button>
-                    <button id="export-transcription" class="control-btn small">Export</button>
+                    <button id="clear-keywords" class="control-btn small">Clear</button>
+                    <button id="export-keywords" class="control-btn small">Export</button>
                 </div>
             </section>
 
@@ -117,16 +139,7 @@
             <section class="participants-panel">
                 <h2>Participants</h2>
                 <div id="participants-list" class="participants-list">
-                    <div class="participant-item">
-                        <div class="participant-avatar">👤</div>
-                        <div class="participant-info">
-                            <span class="participant-name">Current User</span>
-                            <span class="participant-status">Speaking</span>
-                        </div>
-                        <div class="participant-indicators">
-                            <span class="activity-indicator active"></span>
-                        </div>
-                    </div>
+                    <p class="placeholder-text">Start a meeting to see participants...</p>
                 </div>
             </section>
         </div>

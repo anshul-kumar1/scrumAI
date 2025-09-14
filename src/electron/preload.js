@@ -2,28 +2,28 @@
  * Electron Preload Script
  * 
  * This script runs in the renderer process context but has access to Node.js APIs.
- * Responsibilities:
- * - Secure bridge between main and renderer processes
- * - Expose safe IPC methods to the renderer
- * - Maintain security by not exposing full Node.js APIs to renderer
- * - Context isolation security implementation
+ * Since contextIsolation is disabled, we expose electronAPI directly to window.
  */
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { ipcRenderer } = require('electron');
 
 /**
- * Expose protected methods that allow the renderer process to use
- * the ipcRenderer without exposing the entire object
+ * Expose electronAPI directly to window since contextIsolation is false
  */
-contextBridge.exposeInMainWorld('electronAPI', {
+window.electronAPI = {
   // Meeting management
   startMeeting: (meetingData) => ipcRenderer.invoke('start-meeting', meetingData),
   stopMeeting: () => ipcRenderer.invoke('stop-meeting'),
   
-  // Audio processing
+  // AI processing
+  initializeAI: () => ipcRenderer.invoke('initialize-ai'),
   processAudio: (audioData) => ipcRenderer.invoke('process-audio', audioData),
   
   // AI results listener
+  onAIResult: (callback) => ipcRenderer.on('ai-result', (event, ...args) => callback(...args)),
+  removeAIResultListener: (callback) => ipcRenderer.removeListener('ai-result', callback),
+  
+  // Legacy AI results (for backwards compatibility)
   onAIResults: (callback) => ipcRenderer.on('ai-results', callback),
   removeAIResultsListener: (callback) => ipcRenderer.removeListener('ai-results', callback),
   
@@ -38,16 +38,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // System information
   platform: process.platform,
   arch: process.arch
-});
+};
+
+// Debug: Log that electronAPI is available
+console.log('Preload script loaded - electronAPI exposed to window');
+console.log('Available electronAPI methods:', Object.keys(window.electronAPI));
 
 /**
  * DOM Content Loaded Event
  * Initialize any preload-specific functionality
  */
 window.addEventListener('DOMContentLoaded', () => {
-  console.log('Preload script loaded - secure bridge established');
+  console.log('Preload script DOM loaded - electronAPI ready');
   
   // Set platform-specific styles
   document.body.classList.add(`platform-${process.platform}`);
   document.body.classList.add(`arch-${process.arch}`);
+  
+  // Verify electronAPI is accessible
+  if (window.electronAPI) {
+    console.log('✅ electronAPI is available in renderer');
+  } else {
+    console.error('❌ electronAPI is NOT available in renderer');
+  }
 });

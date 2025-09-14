@@ -37,11 +37,11 @@ class AuthManager {
                     this.currentUser = session.user;
                     this.isAuthenticated = true;
                     await this.ensureProfile();
-                    this.notifyCallbacks('signed-in');
+                    this.notifyCallbacks('signed-in', session.user);
                 } else if (event === 'SIGNED_OUT') {
                     this.currentUser = null;
                     this.isAuthenticated = false;
-                    this.notifyCallbacks('signed-out');
+                    this.notifyCallbacks('signed-out', null);
                 }
             });
 

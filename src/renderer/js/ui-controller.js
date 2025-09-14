@@ -18,8 +18,11 @@ export class UIController {
         this.actionItemsContainer = null;
         
         // UI state
-        this.transcriptionText = '';
-        this.maxTranscriptionLines = 50;
+        // State tracking for keywords
+        this.keywords = new Map(); // keyword -> {frequency, importance, contexts, lastSeen}
+        this.recentSpeechSegments = [];
+        this.maxRecentSegments = 5;
+        this.fullTranscription = '';
     }
 
     /**
@@ -29,9 +32,11 @@ export class UIController {
         console.log('Initializing UI Controller...');
         
         // Get UI element references
-        this.transcriptionContainer = document.getElementById('transcription-container');
+        // Initialize containers
+        this.keywordsContainer = document.getElementById('keywords-container');
+        this.recentSpeechContainer = document.getElementById('recent-speech-text');
         this.sentimentIndicator = document.getElementById('sentiment-indicator');
-        this.keywordsContainer = document.getElementById('keywords-cloud');
+        this.keywordsCloudContainer = document.getElementById('keywords-cloud');
         this.actionItemsContainer = document.getElementById('action-items-list');
         
         // Set up UI event listeners
@@ -44,11 +49,19 @@ export class UIController {
      * Set up additional UI event listeners
      */
     setupEventListeners() {
-        // Clear transcription button
-        const clearBtn = document.getElementById('clear-transcription');
+        // Clear keywords button
+        const clearBtn = document.getElementById('clear-keywords');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
                 this.clearTranscription();
+            });
+        }
+        
+        // View full transcript button
+        const viewTranscriptBtn = document.getElementById('view-full-transcript');
+        if (viewTranscriptBtn) {
+            viewTranscriptBtn.addEventListener('click', () => {
+                this.showFullTranscript();
             });
         }
     }
@@ -75,32 +88,207 @@ export class UIController {
     }
 
     /**
-     * Add new transcription text
+     * Process new transcription text and extract keywords
      */
     addTranscription(text) {
-        if (!this.transcriptionContainer || !text) return;
+        if (!text) return;
         
         const timestamp = new Date().toLocaleTimeString();
         
-        // Create transcription entry
-        const entry = document.createElement('div');
-        entry.className = 'transcription-entry';
-        entry.innerHTML = `
-            <span class="timestamp">[${timestamp}]</span>
-            <span class="text">${this.escapeHtml(text)}</span>
+        // Add to full transcription
+        this.fullTranscription += `[${timestamp}] ${text}\n`;
+        
+        // Add to recent speech
+        this.addRecentSpeech(text, timestamp);
+        
+        // Extract and process keywords
+        this.processKeywords(text);
+        
+        // Update UI stats
+        this.updateStats();
+    }
+
+    /**
+     * Add text to recent speech display
+     */
+    addRecentSpeech(text, timestamp) {
+        if (!this.recentSpeechContainer) return;
+        
+        // Add new segment
+        this.recentSpeechSegments.unshift({ text, timestamp });
+        
+        // Limit segments
+        if (this.recentSpeechSegments.length > this.maxRecentSegments) {
+            this.recentSpeechSegments = this.recentSpeechSegments.slice(0, this.maxRecentSegments);
+        }
+        
+        // Update display
+        this.renderRecentSpeech();
+    }
+
+    /**
+     * Render recent speech segments
+     */
+    renderRecentSpeech() {
+        if (!this.recentSpeechContainer) return;
+        
+        if (this.recentSpeechSegments.length === 0) {
+            this.recentSpeechContainer.innerHTML = '<p class="placeholder-text">Recent words will appear here...</p>';
+            return;
+        }
+        
+        const html = this.recentSpeechSegments.map(segment => `
+            <div class="speech-segment">
+                <span class="timestamp">[${segment.timestamp}]</span>
+                ${this.escapeHtml(segment.text)}
+            </div>
+        `).join('');
+        
+        this.recentSpeechContainer.innerHTML = html;
+    }
+
+    /**
+     * Process text to extract keywords
+     */
+    processKeywords(text) {
+        // Simple keyword extraction (can be enhanced with NLP)
+        const words = text.toLowerCase()
+            .replace(/[^\w\s]/g, ' ')
+            .split(/\s+/)
+            .filter(word => word.length > 3 && !this.isStopWord(word));
+        
+        const now = Date.now();
+        
+        words.forEach(word => {
+            if (this.keywords.has(word)) {
+                const keywordData = this.keywords.get(word);
+                keywordData.frequency += 1;
+                keywordData.lastSeen = now;
+                keywordData.contexts.push(text.substring(0, 100));
+            } else {
+                this.keywords.set(word, {
+                    frequency: 1,
+                    importance: this.calculateImportance(word),
+                    contexts: [text.substring(0, 100)],
+                    lastSeen: now
+                });
+            }
+        });
+        
+        this.renderKeywords();
+    }
+
+    /**
+     * Calculate keyword importance based on various factors
+     */
+    calculateImportance(word) {
+        // Business/technical terms get higher importance
+        const highImportanceTerms = ['project', 'deadline', 'budget', 'client', 'requirement', 'issue', 'priority', 'task', 'goal', 'strategy', 'meeting', 'decision', 'action', 'timeline', 'deliverable'];
+        const mediumImportanceTerms = ['team', 'discussion', 'update', 'status', 'review', 'feedback', 'question', 'problem', 'solution', 'plan'];
+        
+        if (highImportanceTerms.includes(word)) return 'high';
+        if (mediumImportanceTerms.includes(word)) return 'medium';
+        return 'low';
+    }
+
+    /**
+     * Check if word is a stop word
+     */
+    isStopWord(word) {
+        const stopWords = ['this', 'that', 'with', 'have', 'will', 'from', 'they', 'know', 'want', 'been', 'good', 'much', 'some', 'time', 'very', 'when', 'come', 'here', 'just', 'like', 'long', 'make', 'many', 'over', 'such', 'take', 'than', 'them', 'well', 'were'];
+        return stopWords.includes(word);
+    }
+
+    /**
+     * Render keywords as interactive elements
+     */
+    renderKeywords() {
+        if (!this.keywordsContainer) return;
+        
+        if (this.keywords.size === 0) {
+            this.keywordsContainer.innerHTML = '<p class="placeholder-text">Start a meeting to see key topics and insights...</p>';
+            return;
+        }
+        
+        // Sort keywords by frequency and importance
+        const sortedKeywords = Array.from(this.keywords.entries())
+            .sort(([, a], [, b]) => {
+                const importanceWeight = { high: 3, medium: 2, low: 1 };
+                const scoreA = a.frequency * importanceWeight[a.importance];
+                const scoreB = b.frequency * importanceWeight[b.importance];
+                return scoreB - scoreA;
+            });
+        
+        const html = sortedKeywords.map(([word, data]) => `
+            <div class="keyword-item ${data.importance}-importance" 
+                 data-keyword="${word}" 
+                 onclick="window.uiController.showKeywordTooltip(this, '${word}')">
+                ${this.escapeHtml(word)}
+                ${data.frequency > 1 ? `<span class="keyword-frequency">${data.frequency}</span>` : ''}
+            </div>
+        `).join('');
+        
+        this.keywordsContainer.innerHTML = html;
+    }
+
+    /**
+     * Show tooltip with keyword information
+     */
+    showKeywordTooltip(element, word) {
+        // Remove existing tooltips
+        document.querySelectorAll('.keyword-tooltip').forEach(tooltip => tooltip.remove());
+        
+        const keywordData = this.keywords.get(word);
+        if (!keywordData) return;
+        
+        const tooltip = document.createElement('div');
+        tooltip.className = 'keyword-tooltip visible';
+        
+        const recentContext = keywordData.contexts[keywordData.contexts.length - 1];
+        const totalMentions = keywordData.frequency;
+        const importance = keywordData.importance;
+        
+        tooltip.innerHTML = `
+            <div class="tooltip-title">${this.escapeHtml(word)}</div>
+            <div class="tooltip-context">"...${this.escapeHtml(recentContext)}..."</div>
+            <div class="tooltip-stats">
+                <div class="tooltip-stat">
+                    <div class="tooltip-stat-value">${totalMentions}</div>
+                    <div>Mentions</div>
+                </div>
+                <div class="tooltip-stat">
+                    <div class="tooltip-stat-value">${importance}</div>
+                    <div>Priority</div>
+                </div>
+            </div>
         `;
         
-        // Add to container
-        this.transcriptionContainer.appendChild(entry);
+        element.appendChild(tooltip);
         
-        // Keep track of text for export
-        this.transcriptionText += `[${timestamp}] ${text}\n`;
+        // Remove tooltip after 3 seconds
+        setTimeout(() => {
+            if (tooltip.parentNode) {
+                tooltip.remove();
+            }
+        }, 3000);
+    }
+
+    /**
+     * Update statistics display
+     */
+    updateStats() {
+        const keywordCountEl = document.getElementById('keyword-count');
+        const topicCountEl = document.getElementById('topic-count');
         
-        // Limit number of entries
-        this.limitTranscriptionEntries();
+        if (keywordCountEl) {
+            keywordCountEl.textContent = this.keywords.size;
+        }
         
-        // Auto-scroll to bottom
-        this.scrollToBottom();
+        if (topicCountEl) {
+            // Count unique high-importance keywords as topics
+            const topics = Array.from(this.keywords.values()).filter(data => data.importance === 'high').length;
+            topicCountEl.textContent = topics;
+        }
     }
 
     /**
@@ -238,30 +426,103 @@ export class UIController {
      * Get current transcription text for export
      */
     getTranscriptionText() {
-        return this.transcriptionText;
+        return this.fullTranscription;
     }
 
     /**
-     * Clear transcription display
+     * Clear all transcription data
      */
     clearTranscription() {
-        if (this.transcriptionContainer) {
-            this.transcriptionContainer.innerHTML = '<p class="placeholder-text">Transcription cleared...</p>';
+        // Clear keywords
+        this.keywords.clear();
+        this.recentSpeechSegments = [];
+        this.fullTranscription = '';
+        
+        // Reset UI
+        if (this.keywordsContainer) {
+            this.keywordsContainer.innerHTML = '<p class="placeholder-text">Start a meeting to see key topics and insights...</p>';
         }
-        this.transcriptionText = '';
+        
+        if (this.recentSpeechContainer) {
+            this.recentSpeechContainer.innerHTML = '<p class="placeholder-text">Recent words will appear here...</p>';
+        }
+        
+        // Reset stats
+        this.updateStats();
     }
 
     /**
-     * Limit transcription entries to prevent memory issues
+     * Show full transcript in a modal or new window
      */
-    limitTranscriptionEntries() {
-        if (!this.transcriptionContainer) return;
-        
-        const entries = this.transcriptionContainer.getElementsByClassName('transcription-entry');
-        
-        while (entries.length > this.maxTranscriptionLines) {
-            this.transcriptionContainer.removeChild(entries[0]);
+    showFullTranscript() {
+        if (!this.fullTranscription) {
+            alert('No transcription available yet.');
+            return;
         }
+        
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        
+        const modal = document.createElement('div');
+        modal.className = 'transcript-modal';
+        modal.style.cssText = `
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+            color: #ffffff;
+        `;
+        
+        modal.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="margin: 0; color: #ffffff;">Full Transcript</h2>
+                <button onclick="this.closest('.modal-overlay').remove()" style="
+                    background: #ef4444;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 12px;
+                    cursor: pointer;
+                ">Close</button>
+            </div>
+            <div style="
+                background: #111;
+                border: 1px solid #333;
+                border-radius: 8px;
+                padding: 16px;
+                white-space: pre-wrap;
+                font-family: monospace;
+                font-size: 13px;
+                line-height: 1.5;
+                color: #e5e7eb;
+            ">${this.escapeHtml(this.fullTranscription)}</div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+            }
+        });
     }
 
     /**
@@ -345,6 +606,174 @@ export class UIController {
         if (overlay) {
             overlay.classList.add('hidden');
         }
+    }
+
+    /**
+     * Add participant to the UI
+     */
+    addParticipant(participant) {
+        const participantsList = document.getElementById('participants-list');
+        if (!participantsList) return;
+
+        const participantElement = document.createElement('div');
+        participantElement.className = 'participant-item';
+        participantElement.dataset.participantId = participant.id;
+        
+        participantElement.innerHTML = `
+            <div class="participant-avatar">${participant.avatar || '👤'}</div>
+            <div class="participant-info">
+                <span class="participant-name">${participant.name}</span>
+                <span class="participant-status">${participant.status || 'Listening'}</span>
+            </div>
+            <div class="participant-indicators">
+                <span class="activity-indicator ${participant.isActive ? 'active' : ''}"></span>
+            </div>
+        `;
+        
+        participantsList.appendChild(participantElement);
+    }
+
+    /**
+     * Remove participant from the UI
+     */
+    removeParticipant(participantId) {
+        const participantElement = document.querySelector(`[data-participant-id="${participantId}"]`);
+        if (participantElement) {
+            participantElement.remove();
+        }
+    }
+
+    /**
+     * Update participant status
+     */
+    updateParticipantStatus(participantId, status, isActive = false) {
+        const participantElement = document.querySelector(`[data-participant-id="${participantId}"]`);
+        if (!participantElement) return;
+
+        const statusElement = participantElement.querySelector('.participant-status');
+        const indicatorElement = participantElement.querySelector('.activity-indicator');
+        
+        if (statusElement) statusElement.textContent = status;
+        if (indicatorElement) {
+            indicatorElement.classList.toggle('active', isActive);
+        }
+    }
+
+    /**
+     * Clear all participants
+     */
+    clearParticipants() {
+        const participantsList = document.getElementById('participants-list');
+        if (participantsList) {
+            participantsList.innerHTML = '';
+        }
+    }
+
+    /**
+     * Initialize with mock keywords for UI development
+     */
+    initializeMockKeywords() {
+        // Add some demo keywords
+        const mockKeywords = [
+            { text: 'project timeline', importance: 'high', frequency: 3 },
+            { text: 'budget constraints', importance: 'high', frequency: 2 },
+            { text: 'client requirements', importance: 'high', frequency: 4 },
+            { text: 'team collaboration', importance: 'medium', frequency: 2 },
+            { text: 'deadline pressure', importance: 'high', frequency: 1 },
+            { text: 'resource allocation', importance: 'medium', frequency: 1 },
+            { text: 'quality assurance', importance: 'medium', frequency: 1 },
+            { text: 'stakeholder feedback', importance: 'low', frequency: 1 }
+        ];
+        
+        mockKeywords.forEach(mock => {
+            this.keywords.set(mock.text, {
+                frequency: mock.frequency,
+                importance: mock.importance,
+                contexts: [`Demo context for ${mock.text} discussion in meeting`],
+                lastSeen: Date.now()
+            });
+        });
+        
+        // Add mock recent speech
+        this.recentSpeechSegments = [
+            { text: "We need to discuss the project timeline and budget constraints", timestamp: "12:30:15" },
+            { text: "The client requirements have changed significantly", timestamp: "12:30:45" },
+            { text: "Team collaboration is essential for meeting our deadline", timestamp: "12:31:20" }
+        ];
+        
+        this.renderKeywords();
+        this.renderRecentSpeech();
+        this.updateStats();
+    }
+
+    /**
+     * Initialize with mock participants for UI development
+     */
+    initializeMockParticipants() {
+        const mockParticipants = [
+            {
+                id: 'current-user',
+                name: 'You',
+                avatar: '👤',
+                status: 'Speaking',
+                isActive: true
+            },
+            {
+                id: 'user-2',
+                name: 'Sarah Johnson',
+                avatar: '👩‍💼',
+                status: 'Listening',
+                isActive: false
+            },
+            {
+                id: 'user-3',
+                name: 'Mike Chen',
+                avatar: '👨‍💻',
+                status: 'Taking notes',
+                isActive: false
+            },
+            {
+                id: 'user-4',
+                name: 'Alex Rivera',
+                avatar: '👨‍🎨',
+                status: 'Listening',
+                isActive: false
+            },
+            {
+                id: 'user-5',
+                name: 'Emily Davis',
+                avatar: '👩‍🔬',
+                status: 'Listening',
+                isActive: false
+            }
+        ];
+
+        // Clear existing participants first
+        this.clearParticipants();
+        
+        // Add mock participants
+        mockParticipants.forEach(participant => {
+            this.addParticipant(participant);
+        });
+    }
+
+    /**
+     * Simulate random participant activity for UI development
+     */
+    simulateParticipantActivity() {
+        const participants = document.querySelectorAll('.participant-item');
+        const statuses = ['Speaking', 'Listening', 'Taking notes', 'Typing', 'On mute'];
+        
+        participants.forEach((participantElement, index) => {
+            // Skip the current user (first participant)
+            if (index === 0) return;
+            
+            const participantId = participantElement.dataset.participantId;
+            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            const isActive = randomStatus === 'Speaking' && Math.random() > 0.7;
+            
+            this.updateParticipantStatus(participantId, randomStatus, isActive);
+        });
     }
 
     /**

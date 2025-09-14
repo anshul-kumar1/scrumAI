@@ -59,26 +59,64 @@ function createWindow() {
  * Initialize Python AI subprocess
  */
 function initializePythonAI() {
-  const pythonScriptPath = path.join(__dirname, '../python/ai_processor.py');
-  
-  pythonProcess = spawn('python', [pythonScriptPath], {
-    stdio: ['pipe', 'pipe', 'pipe']
-  });
+  return new Promise((resolve, reject) => {
+    const pythonScriptPath = path.join(__dirname, '../python/ai_processor.py');
+    
+    console.log('Starting Python AI processor:', pythonScriptPath);
+    
+    // Use Python from virtual environment
+    const pythonPath = path.join(__dirname, '../python/ai-env/bin/python');
+    
+    pythonProcess = spawn(pythonPath, [pythonScriptPath], {
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
 
-  pythonProcess.stdout.on('data', (data) => {
-    console.log('Python AI Output:', data.toString());
-    // Forward AI results to renderer process
-    if (mainWindow) {
-      mainWindow.webContents.send('ai-results', data.toString());
-    }
-  });
+    let initResponseReceived = false;
 
-  pythonProcess.stderr.on('data', (data) => {
-    console.error('Python AI Error:', data.toString());
-  });
+    pythonProcess.stdout.on('data', (data) => {
+      const output = data.toString().trim();
+      console.log('Python AI Output:', output);
+      
+      try {
+        const result = JSON.parse(output);
+        
+        if (!initResponseReceived) {
+          // This is the initialization response
+          initResponseReceived = true;
+          if (result.success) {
+            resolve(result);
+          } else {
+            reject(new Error(result.error || 'AI initialization failed'));
+          }
+        } else {
+          // This is an AI processing result
+          if (mainWindow) {
+            mainWindow.webContents.send('ai-result', result);
+          }
+        }
+      } catch (e) {
+        console.log('Non-JSON output from Python AI:', output);
+      }
+    });
 
-  pythonProcess.on('close', (code) => {
-    console.log(`Python AI process exited with code ${code}`);
+    pythonProcess.stderr.on('data', (data) => {
+      console.error('Python AI Error:', data.toString());
+    });
+
+    pythonProcess.on('close', (code) => {
+      console.log(`Python AI process exited with code ${code}`);
+      pythonProcess = null;
+      if (!initResponseReceived) {
+        reject(new Error(`Python process exited with code ${code}`));
+      }
+    });
+
+    pythonProcess.on('error', (error) => {
+      console.error('Failed to start Python AI process:', error);
+      if (!initResponseReceived) {
+        reject(error);
+      }
+    });
   });
 }
 
@@ -86,26 +124,58 @@ function initializePythonAI() {
  * IPC Event Handlers
  */
 
+// Handle AI initialization
+ipcMain.handle('initialize-ai', async (event) => {
+  try {
+    console.log('Initializing AI processor...');
+    const result = await initializePythonAI();
+    return result;
+  } catch (error) {
+    console.error('AI initialization failed:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // Handle audio data from renderer for AI processing
 ipcMain.handle('process-audio', async (event, audioData) => {
-  if (pythonProcess) {
-    pythonProcess.stdin.write(JSON.stringify(audioData) + '\n');
+  try {
+    if (pythonProcess && pythonProcess.stdin.writable) {
+      const message = {
+        type: 'audio_chunk',
+        audio_data: audioData
+      };
+      pythonProcess.stdin.write(JSON.stringify(message) + '\n');
+      return { success: true };
+    } else {
+      throw new Error('Python AI process not available');
+    }
+  } catch (error) {
+    console.error('Failed to process audio:', error);
+    return { success: false, error: error.message };
   }
 });
 
 // Handle meeting start/stop events
 ipcMain.handle('start-meeting', async (event, meetingData) => {
   console.log('Starting meeting:', meetingData);
-  initializePythonAI();
+  
+  // Initialize AI if not already running
+  if (!pythonProcess) {
+    try {
+      await initializePythonAI();
+    } catch (error) {
+      console.error('Failed to start AI for meeting:', error);
+      return { success: false, error: 'AI initialization failed' };
+    }
+  }
+  
   return { success: true, meetingId: Date.now() };
 });
 
 ipcMain.handle('stop-meeting', async (event) => {
   console.log('Stopping meeting');
-  if (pythonProcess) {
-    pythonProcess.kill();
-    pythonProcess = null;
-  }
+  // Keep Python AI process alive for future meetings
+  // Only kill it when the app closes
   return { success: true };
 });
 

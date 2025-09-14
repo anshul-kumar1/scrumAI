@@ -43,11 +43,22 @@ export class AudioManager {
             this.mediaRecorder = new MediaRecorder(this.stream);
             const audioChunks = [];
 
-            this.mediaRecorder.ondataavailable = (event) => {
+            this.mediaRecorder.ondataavailable = async (event) => {
                 if (event.data.size > 0) {
                     audioChunks.push(event.data);
-                    // Notify callbacks with audio data
-                    this.callbacks.forEach(callback => callback(event.data));
+                    
+                    // Convert Blob to base64 for IPC transmission
+                    try {
+                        const arrayBuffer = await event.data.arrayBuffer();
+                        const base64Data = this.arrayBufferToBase64(arrayBuffer);
+                        
+                        console.log(`Audio chunk: ${event.data.size} bytes -> ${base64Data.length} base64 chars`);
+                        
+                        // Notify callbacks with base64 audio data
+                        this.callbacks.forEach(callback => callback(base64Data));
+                    } catch (error) {
+                        console.error('Failed to convert audio data:', error);
+                    }
                 }
             };
 
@@ -78,6 +89,18 @@ export class AudioManager {
 
     onAudioData(callback) {
         this.callbacks.push(callback);
+    }
+
+    /**
+     * Convert ArrayBuffer to base64 string for IPC transmission
+     */
+    arrayBufferToBase64(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
     }
 
     cleanup() {
