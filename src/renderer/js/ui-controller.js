@@ -10,7 +10,7 @@
  * - Provide user feedback and notifications
  */
 
-class UIController {
+export class UIController {
     constructor() {
         this.transcriptionContainer = null;
         this.sentimentIndicator = null;

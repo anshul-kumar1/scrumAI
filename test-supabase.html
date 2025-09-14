@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Supabase Connection Test</h1>
+    
+    <div id="status" class="status info">Testing connection...</div>
+    
+    <div>
+        <button onclick="testConnection()">Test Connection</button>
+        <button onclick="testAuth()">Test Auth</button>
+        <button onclick="testSignUp()">Test Sign Up</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { supabase } from './src/renderer/auth/supabaseClient.js';
+
+        window.supabase = supabase; // Make available globally for buttons
+
+        async function testConnection() {
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('results');
+            
+            try {
+                statusEl.textContent = 'Testing Supabase connection...';
+                statusEl.className = 'status info';
+                
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) throw error;
+                
+                statusEl.textContent = '✅ Supabase connection successful!';
+                statusEl.className = 'status success';
+                
+                resultsEl.innerHTML += '<div class="status success">Connection test passed</div>';
+            } catch (error) {
+                statusEl.textContent = '❌ Connection failed: ' + error.message;
+                statusEl.className = 'status error';
+                
+                resultsEl.innerHTML += '<div class="status error">Connection failed: ' + error.message + '</div>';
+            }
+        }
+
+        async function testAuth() {
+            const resultsEl = document.getElementById('results');
+            
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) throw error;
+                
+                if (session) {
+                    resultsEl.innerHTML += '<div class="status success">Auth session found: ' + session.user.email + '</div>';
+                } else {
+                    resultsEl.innerHTML += '<div class="status info">No active session</div>';
+                }
+            } catch (error) {
+                resultsEl.innerHTML += '<div class="status error">Auth test failed: ' + error.message + '</div>';
+            }
+        }
+
+        async function testSignUp() {
+            const resultsEl = document.getElementById('results');
+            const testEmail = 'test' + Date.now() + '@example.com';
+            
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: testEmail,
+                    password: 'testpassword123'
+                });
+                
+                if (error) throw error;
+                
+                resultsEl.innerHTML += '<div class="status success">Sign up test successful for: ' + testEmail + '</div>';
+            } catch (error) {
+                resultsEl.innerHTML += '<div class="status error">Sign up test failed: ' + error.message + '</div>';
+            }
+        }
+
+        // Make functions available globally
+        window.testConnection = testConnection;
+        window.testAuth = testAuth;
+        window.testSignUp = testSignUp;
+
+        // Auto-test connection on load
+        testConnection();
+    </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Auth</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007cba; }
+        .error { border-left-color: #dc3545; }
+        .success { border-left-color: #28a745; }
+        button { padding: 10px 20px; margin: 5px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>🐛 Debug Authentication</h1>
+    
+    <div id="logs"></div>
+    
+    <div>
+        <h3>Test Authentication</h3>
+        <input type="email" id="email" placeholder="Email" value="test@example.com">
+        <input type="password" id="password" placeholder="Password" value="testpass123">
+        <br>
+        <button onclick="testSignUp()">Sign Up</button>
+        <button onclick="testSignIn()">Sign In</button>
+        <button onclick="testSignOut()">Sign Out</button>
+        <button onclick="checkSession()">Check Session</button>
+    </div>
+
+    <script type="module">
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
+            console.log(message);
+        }
+
+        let supabase;
+        let authManager;
+
+        try {
+            log('Loading Supabase client...');
+            const { supabase: sb } = await import('./src/renderer/auth/supabaseClient.js');
+            supabase = sb;
+            log('✅ Supabase client loaded', 'success');
+
+            log('Loading Auth Manager...');
+            const { authManager: am } = await import('./src/renderer/auth/authManager.js');
+            authManager = am;
+            log('✅ Auth Manager loaded', 'success');
+
+            log('Initializing Auth Manager...');
+            const result = await authManager.init();
+            if (result.success) {
+                log('✅ Auth Manager initialized', 'success');
+            } else {
+                log('❌ Auth Manager init failed: ' + result.error.message, 'error');
+            }
+
+        } catch (error) {
+            log('❌ Setup failed: ' + error.message, 'error');
+        }
+
+        window.testSignUp = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                log(`Signing up with ${email}...`);
+                const result = await authManager.signUp(email, password, { full_name: 'Test User' });
+                
+                if (result.success) {
+                    log('✅ Sign up successful!', 'success');
+                    if (result.data.user && !result.data.user.email_confirmed_at) {
+                        log('📧 Check your email to confirm account');
+                    }
+                } else {
+                    log('❌ Sign up failed: ' + result.error.message, 'error');
+                }
+            } catch (error) {
+                log('❌ Sign up error: ' + error.message, 'error');
+            }
+        };
+
+        window.testSignIn = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                log(`Signing in with ${email}...`);
+                const result = await authManager.signIn(email, password);
+                
+                if (result.success) {
+                    log('✅ Sign in successful!', 'success');
+                } else {
+                    log('❌ Sign in failed: ' + result.error.message, 'error');
+                }
+            } catch (error) {
+                log('❌ Sign in error: ' + error.message, 'error');
+            }
+        };
+
+        window.testSignOut = async function() {
+            try {
+                log('Signing out...');
+                const result = await authManager.signOut();
+                
+                if (result.success) {
+                    log('✅ Sign out successful!', 'success');
+                } else {
+                    log('❌ Sign out failed: ' + result.error.message, 'error');
+                }
+            } catch (error) {
+                log('❌ Sign out error: ' + error.message, 'error');
+            }
+        };
+
+        window.checkSession = async function() {
+            try {
+                log('Checking session...');
+                const isAuth = authManager.isUserAuthenticated();
+                const user = authManager.getCurrentUser();
+                
+                if (isAuth && user) {
+                    log(`✅ Authenticated as: ${user.email}`, 'success');
+                } else {
+                    log('❌ Not authenticated');
+                }
+            } catch (error) {
+                log('❌ Session check error: ' + error.message, 'error');
+            }
+        };
+
+        // Auto-check session on load
+        setTimeout(() => {
+            if (window.checkSession) {
+                window.checkSession();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -10,6 +10,12 @@
  * - Provide centralized error handling and logging
  */
 
+import { authManager } from '../auth/authManager.js';
+import { authUI } from '../auth/authUI.js';
+import { AudioManager } from './audio-manager.js';
+import { AIInterface } from './ai-interface.js';
+import { UIController } from './ui-controller.js';
+
 class ScrumAIApp {
     constructor() {
         this.isInitialized = false;
@@ -28,6 +34,8 @@ class ScrumAIApp {
             isMeetingActive: false,
             isAudioEnabled: true,
             participants: [],
+            isAuthenticated: false,
+            currentUser: null,
             currentInsights: {
                 sentiment: 'neutral',
                 keywords: [],
@@ -42,6 +50,12 @@ class ScrumAIApp {
     async init() {
         try {
             console.log('Initializing ScrumAI Meeting Assistant...');
+            
+            // Show loading overlay
+            this.showLoading('Initializing authentication...');
+            
+            // Initialize authentication first
+            await this.initializeAuth();
             
             // Show loading overlay
             this.showLoading('Initializing application...');
@@ -64,6 +78,51 @@ class ScrumAIApp {
         } catch (error) {
             console.error('Failed to initialize application:', error);
             this.handleError('Initialization failed', error);
+        }
+    }
+
+    /**
+     * Initialize authentication
+     */
+    async initializeAuth() {
+        try {
+            // Initialize auth manager
+            const result = await authManager.init();
+            if (!result.success) {
+                throw result.error;
+            }
+
+            // Update app state
+            this.state.isAuthenticated = authManager.isUserAuthenticated();
+            this.state.currentUser = authManager.getCurrentUser();
+
+            // Initialize auth UI
+            authUI.init();
+            
+            // Update initial connection status
+            this.updateConnectionStatus();
+
+            // Listen for auth state changes
+            authManager.onAuthChange((event, user) => {
+                this.state.isAuthenticated = event === 'signed-in';
+                this.state.currentUser = user;
+                this.updateConnectionStatus(); // Update all connection statuses
+                
+                if (event === 'signed-in') {
+                    console.log('User signed in:', user.email);
+                } else if (event === 'signed-out') {
+                    console.log('User signed out');
+                    // Stop any active meetings
+                    if (this.state.isMeetingActive) {
+                        this.stopMeeting();
+                    }
+                }
+            });
+
+            console.log('Authentication initialized');
+        } catch (error) {
+            console.error('Failed to initialize authentication:', error);
+            throw error;
         }
     }
 
@@ -162,11 +221,19 @@ class ScrumAIApp {
         try {
             console.log('Starting meeting...');
             
+            // Check authentication
+            if (!this.state.isAuthenticated) {
+                console.warn('Cannot start meeting: user not authenticated');
+                authUI.show();
+                return;
+            }
+            
             // Create meeting data
             const meetingData = {
                 title: `Meeting ${new Date().toLocaleString()}`,
+                organizer_id: this.state.currentUser.id,
                 startTime: new Date().toISOString(),
-                participants: ['Current User']
+                participants: [this.state.currentUser.email]
             };
             
             // Start meeting via Electron API
@@ -362,16 +429,36 @@ class ScrumAIApp {
     }
 
     updateConnectionStatus() {
-        // Update database status (hardcoded to offline since no database client)
+        this.updateAuthStatus();
+        
+        // Update database status
         const dbStatus = document.getElementById('db-status');
         if (dbStatus) {
-            dbStatus.className = 'status-indicator disconnected';
+            const dbClass = this.state.isAuthenticated ? 'status-indicator connected' : 'status-indicator disconnected';
+            dbStatus.className = dbClass;
+            dbStatus.textContent = this.state.isAuthenticated ? '🔗 Database: Connected' : '🔗 Database: Disconnected';
         }
         
         // Update AI status
         const aiStatus = document.getElementById('ai-status');
         if (aiStatus) {
             aiStatus.className = this.aiInterface && this.aiInterface.isReady ? 'status-indicator connected' : 'status-indicator disconnected';
+        }
+    }
+
+    /**
+     * Update authentication status in UI
+     */
+    updateAuthStatus() {
+        const authStatus = document.getElementById('auth-status');
+        if (authStatus) {
+            if (this.state.isAuthenticated) {
+                authStatus.className = 'status-indicator connected';
+                authStatus.textContent = `🔐 Auth: ${this.state.currentUser?.email || 'Authenticated'}`;
+            } else {
+                authStatus.className = 'status-indicator disconnected';
+                authStatus.textContent = '🔐 Auth: Not authenticated';
+            }
         }
     }
 

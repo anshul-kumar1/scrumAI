@@ -136,7 +136,8 @@
     <footer class="app-footer">
         <div class="footer-content">
             <div class="connection-status">
-                <span id="db-status" class="status-indicator">🔗 Database: Connected</span>
+                <span id="auth-status" class="status-indicator">🔐 Auth: Not authenticated</span>
+                <span id="db-status" class="status-indicator">🔗 Database: Disconnected</span>
                 <span id="ai-status" class="status-indicator">🧠 AI: Ready</span>
             </div>
             <div class="app-version">
@@ -152,10 +153,6 @@
     </div>
 
     <!-- JavaScript Components -->
-    <script src="js/audio-manager.js"></script>
-    <script src="js/ai-interface.js"></script>
-    <script src="js/database-client.js"></script>
-    <script src="js/ui-controller.js"></script>
-    <script src="js/main.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

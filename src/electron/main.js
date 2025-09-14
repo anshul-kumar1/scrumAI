@@ -27,8 +27,8 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: false, // Security best practice
-      contextIsolation: true, // Security best practice
+      nodeIntegration: true, // Enable for Supabase access
+      contextIsolation: false, // Disable for module access
       preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, '../assets/icon.png'),

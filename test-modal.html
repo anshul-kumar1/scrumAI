@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal</title>
+</head>
+<body>
+    <h1>Testing Auth Modal</h1>
+    <button onclick="testModal()">Show Auth Modal</button>
+    
+    <script type="module">
+        let authUI;
+        
+        try {
+            const { authUI: ui } = await import('./src/renderer/auth/authUI.js');
+            authUI = ui;
+            authUI.init();
+            console.log('Auth UI loaded successfully');
+        } catch (error) {
+            console.error('Failed to load Auth UI:', error);
+        }
+        
+        window.testModal = function() {
+            if (authUI) {
+                authUI.show();
+                console.log('Modal should be visible now');
+            } else {
+                console.error('Auth UI not loaded');
+            }
+        };
+        
+        // Auto-show modal after 2 seconds
+        setTimeout(() => {
+            if (authUI) {
+                console.log('Auto-showing modal...');
+                authUI.show();
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
