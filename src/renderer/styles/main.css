@@ -451,6 +451,12 @@ html, body {
     border-bottom: 1px solid #333;
 }
 
+.header-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
 .notes-header h3,
 .strategy-header h3 {
     font-size: 18px;
@@ -497,6 +503,37 @@ html, body {
     color: #e5e7eb;
     scrollbar-width: thin;
     scrollbar-color: #374151 #1a1a1a;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.notes-content[contenteditable="true"],
+.strategy-content[contenteditable="true"] {
+    background: #1a1a1a;
+    border-color: #3b82f6;
+    outline: none;
+    cursor: text;
+}
+
+.notes-content[contenteditable="true"]:focus,
+.strategy-content[contenteditable="true"]:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+}
+
+.edit-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.save-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.save-btn.hidden {
+    display: none;
 }
 
 .notes-content::-webkit-scrollbar,

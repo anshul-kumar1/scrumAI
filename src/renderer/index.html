@@ -124,12 +124,22 @@
                         <div id="notes-tab" class="tab-content active">
                             <div class="notes-header">
                                 <h3>📋 Meeting Summary</h3>
-                                <button id="export-notes-notion" class="control-btn primary notion-btn">
-                                    <span class="btn-icon">📤</span>
-                                    Export to Notion
-                                </button>
+                                <div class="header-controls">
+                                    <button id="edit-notes-btn" class="control-btn secondary edit-btn">
+                                        <span class="btn-icon">✏️</span>
+                                        Edit
+                                    </button>
+                                    <button id="save-notes-btn" class="control-btn primary save-btn hidden">
+                                        <span class="btn-icon">💾</span>
+                                        Save
+                                    </button>
+                                    <button id="export-notes-notion" class="control-btn primary notion-btn">
+                                        <span class="btn-icon">📤</span>
+                                        Export to Notion
+                                    </button>
+                                </div>
                             </div>
-                            <div id="notes-content" class="notes-content">
+                            <div id="notes-content" class="notes-content" contenteditable="false">
                                 <p class="placeholder-text">Meeting notes will appear here after the meeting ends...</p>
                             </div>
                         </div>
@@ -138,12 +148,22 @@
                         <div id="strategy-tab" class="tab-content">
                             <div class="strategy-header">
                                 <h3>🎯 Strategy & Action Items</h3>
-                                <button id="export-strategy-notion" class="control-btn primary notion-btn">
-                                    <span class="btn-icon">📤</span>
-                                    Export to Notion
-                                </button>
+                                <div class="header-controls">
+                                    <button id="edit-strategy-btn" class="control-btn secondary edit-btn">
+                                        <span class="btn-icon">✏️</span>
+                                        Edit
+                                    </button>
+                                    <button id="save-strategy-btn" class="control-btn primary save-btn hidden">
+                                        <span class="btn-icon">💾</span>
+                                        Save
+                                    </button>
+                                    <button id="export-strategy-notion" class="control-btn primary notion-btn">
+                                        <span class="btn-icon">📤</span>
+                                        Export to Notion
+                                    </button>
+                                </div>
                             </div>
-                            <div id="strategy-content" class="strategy-content">
+                            <div id="strategy-content" class="strategy-content" contenteditable="false">
                                 <p class="placeholder-text">Strategy and action items will appear here after the meeting ends...</p>
                             </div>
                         </div>
