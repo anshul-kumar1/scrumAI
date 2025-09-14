@@ -36,7 +36,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Remove event listeners
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
-
+  
+  // GitHub integration
+  createGithubIssue: (issueData) => ipcRenderer.invoke('create-github-issue', issueData),
+  
   // System information
   platform: process.platform,
   arch: process.arch
