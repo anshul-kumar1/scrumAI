@@ -11,9 +11,13 @@
 
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const WhisperService = require('../services/whisperService');
 
 // Keep a global reference of the window object
 let mainWindow;
+
+// Whisper service instance
+let whisperService;
 
 /**
  * Create the main application window
@@ -56,15 +60,99 @@ function createWindow() {
  * IPC Event Handlers
  */
 
+// Initialize Whisper service
+function initializeWhisperService() {
+  whisperService = new WhisperService();
+
+  // Set up transcript callback to send to renderer
+  whisperService.onTranscript((data) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('whisper-transcript', data);
+    }
+  });
+
+  // Set up error callback
+  whisperService.onError((error) => {
+    console.error('Whisper error:', error);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('whisper-error', error);
+    }
+  });
+
+  // Set up status callback
+  whisperService.onStatus((status) => {
+    console.log('Whisper status:', status.message);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('whisper-status', status);
+    }
+  });
+}
+
 // Handle meeting start/stop events
 ipcMain.handle('start-meeting', async (event, meetingData) => {
   console.log('Starting meeting:', meetingData);
-  return { success: true, meetingId: Date.now() };
+
+  try {
+    if (!whisperService) {
+      initializeWhisperService();
+    }
+
+    await whisperService.start();
+    console.log('Whisper transcription started');
+
+    return { success: true, meetingId: Date.now() };
+  } catch (error) {
+    console.error('Failed to start Whisper transcription:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 ipcMain.handle('stop-meeting', async (event) => {
   console.log('Stopping meeting');
-  return { success: true };
+
+  try {
+    if (whisperService && whisperService.isServiceRunning()) {
+      await whisperService.stop();
+      console.log('Whisper transcription stopped');
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to stop Whisper transcription:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handle transcript export
+ipcMain.handle('save-transcript', async (event, filename) => {
+  console.log('Saving transcript:', filename);
+
+  try {
+    if (!whisperService) {
+      throw new Error('No transcript available - meeting not started');
+    }
+
+    const filepath = await whisperService.saveTranscript(filename);
+    return { success: true, filepath };
+  } catch (error) {
+    console.error('Failed to save transcript:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handle get full transcript
+ipcMain.handle('get-full-transcript', async (event) => {
+  try {
+    if (!whisperService) {
+      return { success: false, error: 'No transcript available - meeting not started' };
+    }
+
+    const transcript = whisperService.getFullTranscript();
+    return { success: true, transcript };
+  } catch (error) {
+    console.error('Failed to get transcript:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 /**
@@ -84,7 +172,16 @@ app.whenReady().then(() => {
 });
 
 // Quit when all windows are closed
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+  // Clean up Whisper service
+  if (whisperService && whisperService.isServiceRunning()) {
+    try {
+      await whisperService.stop();
+    } catch (error) {
+      console.error('Error stopping Whisper service on app quit:', error);
+    }
+  }
+
   // On macOS, keep app running even when all windows are closed
   if (process.platform !== 'darwin') {
     app.quit();

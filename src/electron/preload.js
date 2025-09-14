@@ -13,7 +13,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Meeting management
   startMeeting: (meetingData) => ipcRenderer.invoke('start-meeting', meetingData),
   stopMeeting: () => ipcRenderer.invoke('stop-meeting'),
-  
+
+  // Transcript management
+  saveTranscript: (filename) => ipcRenderer.invoke('save-transcript', filename),
+  getFullTranscript: () => ipcRenderer.invoke('get-full-transcript'),
+
+  // Event listeners for Whisper events
+  onWhisperTranscript: (callback) => ipcRenderer.on('whisper-transcript', callback),
+  onWhisperError: (callback) => ipcRenderer.on('whisper-error', callback),
+  onWhisperStatus: (callback) => ipcRenderer.on('whisper-status', callback),
+
+  // Remove event listeners
+  removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
+
   // System information
   platform: process.platform,
   arch: process.arch

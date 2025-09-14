@@ -17,10 +17,10 @@ class ScrumAIApp {
         this.currentMeeting = null;
         this.meetingStartTime = null;
         this.meetingTimer = null;
-        
+
         // Component instances
         this.uiController = null;
-        
+
         // Application state
         this.state = {
             isMeetingActive: false,
@@ -28,6 +28,10 @@ class ScrumAIApp {
             participants: [],
             activeTab: 'keywords'
         };
+
+        // Whisper integration state
+        this.transcriptData = [];
+        this.isTranscribing = false;
     }
 
     /**
@@ -42,7 +46,10 @@ class ScrumAIApp {
             
             // Set up event listeners
             this.setupEventListeners();
-            
+
+            // Setup Whisper event listeners
+            this.setupWhisperEventListeners();
+
             // Initialize UI state
             this.initializeUI();
             
@@ -107,6 +114,30 @@ class ScrumAIApp {
     }
 
     /**
+     * Setup Whisper event listeners for real-time transcription
+     */
+    setupWhisperEventListeners() {
+        if (typeof window.electronAPI !== 'undefined') {
+            // Listen for transcript data
+            window.electronAPI.onWhisperTranscript((event, data) => {
+                this.handleWhisperTranscript(data);
+            });
+
+            // Listen for errors
+            window.electronAPI.onWhisperError((event, error) => {
+                console.error('Whisper error:', error);
+                this.handleWhisperError(error);
+            });
+
+            // Listen for status updates
+            window.electronAPI.onWhisperStatus((event, status) => {
+                console.log('Whisper status:', status.message);
+                this.handleWhisperStatus(status);
+            });
+        }
+    }
+
+    /**
      * Initialize UI state
      */
     initializeUI() {
@@ -119,38 +150,47 @@ class ScrumAIApp {
     async startMeeting() {
         try {
             console.log('Starting meeting...');
-            
+
             // Create meeting data
             const meetingData = {
                 title: `Meeting ${new Date().toLocaleString()}`,
                 startTime: new Date().toISOString(),
                 participants: ['Demo User']
             };
-            
+
             console.log('Meeting data:', meetingData);
-            
+
+            // Start Whisper transcription via Electron API
+            if (typeof window.electronAPI !== 'undefined') {
+                const result = await window.electronAPI.startMeeting(meetingData);
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to start Whisper transcription');
+                }
+                console.log('Whisper transcription started successfully');
+                this.isTranscribing = true;
+            }
+
             this.currentMeeting = meetingData;
             this.meetingStartTime = Date.now();
             this.state.isMeetingActive = true;
-            
+            this.transcriptData = [];
+
             // Update UI
             this.updateMeetingStatus(true);
             this.startMeetingTimer();
-            
+
             // Initialize mock participants for UI development
             this.initializeMockParticipants();
-            
-            // Initialize mock keywords for UI development
-            this.uiController.initializeMockKeywords();
-            
-            // Initialize mock transcript
-            this.initializeMockTranscript();
-            
+
+            // Clear previous content
+            this.clearTranscriptContent();
+
             console.log('Meeting started successfully');
-            
+
         } catch (error) {
             console.error('Failed to start meeting:', error);
             this.handleError('Failed to start meeting', error);
+            this.isTranscribing = false;
         }
     }
 
@@ -160,30 +200,58 @@ class ScrumAIApp {
     async stopMeeting() {
         try {
             console.log('Stopping meeting...');
-            
+
             if (!this.state.isMeetingActive) return;
-            
+
+            // Stop Whisper transcription via Electron API
+            if (typeof window.electronAPI !== 'undefined' && this.isTranscribing) {
+                const result = await window.electronAPI.stopMeeting();
+                if (!result.success) {
+                    console.error('Failed to stop Whisper transcription:', result.error);
+                } else {
+                    console.log('Whisper transcription stopped successfully');
+                }
+                this.isTranscribing = false;
+
+                // Save transcript to meetingnotes file
+                if (this.transcriptData.length > 0) {
+                    try {
+                        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                        const filename = `meetingnotes_${timestamp}.txt`;
+                        const saveResult = await window.electronAPI.saveTranscript(filename);
+                        if (saveResult.success) {
+                            console.log('Meeting transcript saved to:', saveResult.filepath);
+                            alert(`Meeting notes saved to: ${saveResult.filepath}`);
+                        } else {
+                            console.error('Failed to save transcript:', saveResult.error);
+                        }
+                    } catch (saveError) {
+                        console.error('Error saving transcript:', saveError);
+                    }
+                }
+            }
+
             // Update meeting end time
             if (this.currentMeeting) {
                 this.currentMeeting.endTime = new Date().toISOString();
                 this.currentMeeting.duration = Date.now() - this.meetingStartTime;
             }
-            
+
             // Reset state
             this.state.isMeetingActive = false;
             this.currentMeeting = null;
             this.meetingStartTime = null;
             this.state.participants = [];
-            
+
             // Clear participants from UI
             this.uiController.clearParticipants();
-            
+
             // Update UI
             this.updateMeetingStatus(false);
             this.stopMeetingTimer();
-            
+
             console.log('Meeting stopped successfully');
-            
+
         } catch (error) {
             console.error('Failed to stop meeting:', error);
             this.handleError('Failed to stop meeting', error);
@@ -337,6 +405,88 @@ class ScrumAIApp {
                 this.uiController.simulateParticipantActivity();
             }
         }, 5000);
+    }
+
+    /**
+     * Handle Whisper transcript data
+     */
+    handleWhisperTranscript(data) {
+        console.log('Received Whisper transcript:', data);
+
+        // Store transcript data
+        this.transcriptData.push(data);
+
+        // Add to UI
+        this.addTranscriptToUI(data);
+
+        // Extract keywords from the transcript
+        if (data.text && data.text.trim()) {
+            this.uiController.addTranscription(data.text);
+        }
+    }
+
+    /**
+     * Handle Whisper errors
+     */
+    handleWhisperError(error) {
+        console.error('Whisper error in UI:', error);
+        // You could show an error notification here
+    }
+
+    /**
+     * Handle Whisper status updates
+     */
+    handleWhisperStatus(status) {
+        console.log('Whisper status update:', status.message);
+        // You could show status updates in the UI here
+    }
+
+    /**
+     * Add transcript entry to UI
+     */
+    addTranscriptToUI(data) {
+        const transcriptContent = document.getElementById('transcript-content');
+        if (!transcriptContent) return;
+
+        // Create transcript entry
+        const entry = document.createElement('div');
+        entry.className = 'transcript-entry';
+        entry.innerHTML = `
+            <span class="transcript-timestamp">[${data.timestamp}]</span>
+            <span class="transcript-text">${this.escapeHtml(data.text)}</span>
+        `;
+
+        // Remove placeholder text if it exists
+        const placeholder = transcriptContent.querySelector('.placeholder-text');
+        if (placeholder) {
+            placeholder.remove();
+        }
+
+        // Add new entry
+        transcriptContent.appendChild(entry);
+
+        // Scroll to bottom
+        transcriptContent.scrollTop = transcriptContent.scrollHeight;
+    }
+
+    /**
+     * Clear transcript content
+     */
+    clearTranscriptContent() {
+        const transcriptContent = document.getElementById('transcript-content');
+        if (transcriptContent) {
+            transcriptContent.innerHTML = '<p class="placeholder-text">Start a meeting to see transcript...</p>';
+        }
+        this.transcriptData = [];
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     /**
