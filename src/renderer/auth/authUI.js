@@ -295,6 +295,8 @@ class AuthUI {
         const email = document.getElementById('signin-email').value;
         const password = document.getElementById('signin-password').value;
         
+        console.log('AuthUI: Starting sign-in process for', email);
+        
         // Basic validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
         if (!emailRegex.test(email)) {
@@ -302,16 +304,24 @@ class AuthUI {
             return;
         }
         
+        console.log('AuthUI: Email validation passed, calling authManager.signIn...');
         this.setLoading(true);
-        const result = await authManager.signIn(email, password);
         
-        if (result.success) {
-            this.showMessage('Successfully signed in!', 'success');
-        } else {
-            this.showMessage(result.error.message, 'error');
+        try {
+            const result = await authManager.signIn(email, password);
+            console.log('AuthUI: Sign-in result:', result);
+        
+            if (result.success) {
+                this.showMessage('Successfully signed in!', 'success');
+            } else {
+                this.showMessage(result.error.message, 'error');
+            }
+        } catch (error) {
+            console.error('AuthUI: Sign-in error:', error);
+            this.showMessage('Sign-in failed: ' + error.message, 'error');
+        } finally {
+            this.setLoading(false);
         }
-        
-        this.setLoading(false);
     }
 
     /**

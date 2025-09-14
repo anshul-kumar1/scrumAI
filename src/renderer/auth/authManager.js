@@ -94,15 +94,38 @@ class AuthManager {
      */
     async signIn(email, password) {
         try {
+            console.log('AuthManager: Starting sign-in for', email);
+            
+            if (!supabase) {
+                throw new Error('Supabase client not initialized');
+            }
+            
+            // Test Supabase connection first
+            console.log('AuthManager: Testing Supabase connection...');
+            const { data: testData, error: testError } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+            if (testError) {
+                console.warn('AuthManager: Supabase connection test failed:', testError);
+            } else {
+                console.log('AuthManager: Supabase connection test passed');
+            }
+            
+            console.log('AuthManager: Calling supabase.auth.signInWithPassword...');
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password
             });
 
-            if (error) throw error;
+            console.log('AuthManager: Sign-in response:', { data, error });
+
+            if (error) {
+                console.error('AuthManager: Sign-in error from Supabase:', error);
+                throw error;
+            }
+            
+            console.log('AuthManager: Sign-in successful:', data);
             return { success: true, data };
         } catch (error) {
-            console.error('Sign in failed:', error);
+            console.error('AuthManager: Sign-in failed:', error);
             return { success: false, error };
         }
     }
