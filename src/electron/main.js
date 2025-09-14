@@ -12,12 +12,14 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const WhisperService = require('../services/whisperService');
+const ChatbotService = require('../services/chatbotService');
 
 // Keep a global reference of the window object
 let mainWindow;
 
-// Whisper service instance
+// Service instances
 let whisperService;
+let chatbotService;
 
 /**
  * Create the main application window
@@ -69,6 +71,11 @@ function initializeWhisperService() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('whisper-transcript', data);
     }
+
+    // Update chatbot with latest transcript file if available
+    if (chatbotService && data.transcriptFile) {
+      chatbotService.setLiveTranscriptFile(data.transcriptFile);
+    }
   });
 
   // Set up error callback
@@ -119,6 +126,91 @@ ipcMain.handle('stop-meeting', async (event) => {
     return { success: true };
   } catch (error) {
     console.error('Failed to stop Whisper transcription:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Chatbot Service IPC Handlers
+ipcMain.handle('initialize-chatbot', async (event) => {
+  console.log('Initializing chatbot service');
+
+  try {
+    if (!chatbotService) {
+      chatbotService = new ChatbotService();
+
+      // Set up chatbot event handlers
+      chatbotService.setOnResponseCallback((response, isStreaming) => {
+        if (mainWindow) {
+          mainWindow.webContents.send('chatbot-response', { response, isStreaming });
+        }
+      });
+
+      chatbotService.setOnErrorCallback((error) => {
+        if (mainWindow) {
+          mainWindow.webContents.send('chatbot-error', error.message);
+        }
+      });
+
+      chatbotService.setOnStatusCallback((status) => {
+        if (mainWindow) {
+          mainWindow.webContents.send('chatbot-status', status);
+        }
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to initialize chatbot service:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('start-chatbot', async (event) => {
+  console.log('Starting chatbot service');
+
+  try {
+    if (!chatbotService) {
+      return { success: false, error: 'Chatbot service not initialized' };
+    }
+
+    await chatbotService.start();
+    console.log('Chatbot service started');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to start chatbot service:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('stop-chatbot', async (event) => {
+  console.log('Stopping chatbot service');
+
+  try {
+    if (chatbotService) {
+      await chatbotService.stop();
+      console.log('Chatbot service stopped');
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to stop chatbot service:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('send-chat-message', async (event, message) => {
+  console.log('Sending chat message:', message);
+
+  try {
+    if (!chatbotService) {
+      return { success: false, error: 'Chatbot service not initialized' };
+    }
+
+    const response = await chatbotService.sendMessage(message);
+    return { success: true, data: response };
+  } catch (error) {
+    console.error('Failed to send chat message:', error);
     return { success: false, error: error.message };
   }
 });

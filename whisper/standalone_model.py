@@ -55,7 +55,7 @@ def get_onnx_session_with_fallback(path):
         )
         return session
     except Exception as e:
-        print(f"❌ Failed to load {os.path.basename(path)}: {str(e)}")
+        print(f"[ERROR] Failed to load {os.path.basename(path)}: {str(e)}")
         sys.stdout.flush()
         raise e
 
@@ -72,7 +72,7 @@ class StandaloneONNXEncoder:
             # sys.stdout.flush()
             return self.session.run(None, {"audio": audio})
         except Exception as e:
-            print(f"❌ Error in encoder inference: {e}")
+            print(f"[ERROR] Error in encoder inference: {e}")
             print(f"   Input type: {type(audio)}")
             print(f"   Input shape: {getattr(audio, 'shape', 'No shape attr')}")
             print(f"   Input dtype: {getattr(audio, 'dtype', 'No dtype attr')}")
@@ -105,7 +105,7 @@ class StandaloneONNXDecoder:
                 },
             )
         except Exception as e:
-            print(f"❌ Error in decoder inference: {e}")
+            print(f"[ERROR] Error in decoder inference: {e}")
             sys.stdout.flush()
             raise
 
@@ -137,6 +137,6 @@ class StandaloneWhisperModel:
             )
             return app.transcribe(audio, sample_rate)
         except Exception as e:
-            print(f"❌ Error during transcription: {e}")
+            print(f"[ERROR] Error during transcription: {e}")
             sys.stdout.flush()
             return ""

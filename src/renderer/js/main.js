@@ -10,6 +10,7 @@
  */
 
 import { UIController } from './ui-controller.js';
+import { ChatController } from './chat-controller.js';
 
 class ScrumAIApp {
     constructor() {
@@ -20,6 +21,7 @@ class ScrumAIApp {
 
         // Component instances
         this.uiController = null;
+        this.chatController = null;
 
         // Application state
         this.state = {
@@ -55,6 +57,9 @@ class ScrumAIApp {
             
             this.isInitialized = true;
             console.log('ScrumAI Meeting Assistant initialized successfully');
+
+            // Dispatch app initialization event for chat controller
+            document.dispatchEvent(new CustomEvent('app-initialized'));
             
         } catch (error) {
             console.error('Failed to initialize application:', error);
@@ -69,9 +74,14 @@ class ScrumAIApp {
         // Initialize UI controller
         this.uiController = new UIController();
         this.uiController.init();
-        
-        // Make UI controller globally accessible for keyword tooltips
+
+        // Initialize chat controller
+        this.chatController = new ChatController();
+        await this.chatController.init();
+
+        // Make controllers globally accessible
         window.uiController = this.uiController;
+        window.chatController = this.chatController;
     }
 
     /**

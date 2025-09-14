@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/qc_de/TestSCRUM/scrumAI/src/electron/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

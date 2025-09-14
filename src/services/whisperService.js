@@ -37,9 +37,9 @@ class WhisperService {
             // Check if required files exist
             this.checkRequiredFiles();
 
-            // Start the transcription process
-            const scriptPath = path.join(__dirname, '..', '..', 'whisper', 'transcriber_for_nodejs.py');
-            const workingDir = path.join(__dirname, '..', '..');
+            // Start the transcription process using new meeting transcriber
+            const scriptPath = path.join(__dirname, '..', '..', 'whisper', 'meeting_transcriber.py');
+            const workingDir = path.join(__dirname, '..', '..', 'whisper');
 
             console.log('Starting Whisper transcription process...');
             console.log('Script path:', scriptPath);
@@ -304,7 +304,12 @@ class WhisperService {
             case 'transcript':
                 console.log(`[${data.timestamp}] Transcript: ${data.text}`);
                 if (this.onTranscriptCallback) {
-                    this.onTranscriptCallback(data);
+                    // Include transcript file path in the callback data
+                    const callbackData = {
+                        ...data,
+                        transcriptFile: data.transcriptFile
+                    };
+                    this.onTranscriptCallback(callbackData);
                 }
                 break;
 

@@ -23,6 +23,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onWhisperError: (callback) => ipcRenderer.on('whisper-error', callback),
   onWhisperStatus: (callback) => ipcRenderer.on('whisper-status', callback),
 
+  // Chatbot management
+  initializeChatbot: () => ipcRenderer.invoke('initialize-chatbot'),
+  startChatbot: () => ipcRenderer.invoke('start-chatbot'),
+  stopChatbot: () => ipcRenderer.invoke('stop-chatbot'),
+  sendChatMessage: (message) => ipcRenderer.invoke('send-chat-message', message),
+
+  // Event listeners for Chatbot events
+  onChatbotResponse: (callback) => ipcRenderer.on('chatbot-response', callback),
+  onChatbotError: (callback) => ipcRenderer.on('chatbot-error', callback),
+  onChatbotStatus: (callback) => ipcRenderer.on('chatbot-status', callback),
+
   // Remove event listeners
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
 

@@ -1,0 +1,8 @@
+# AnythingLLM Configuration
+# Copy this from your AnythingLLM build and update with your settings
+
+api_key: "EVKQEJK-81B40VM-KXZTMPV-GSJQFWT"
+model_server_base_url: "http://localhost:3001/api"
+workspace_slug: "testing123"
+stream: true
+stream_timeout: 30

@@ -45,7 +45,7 @@ def process_transcription(
                 print(f"Transcript: {transcript}")
                 flush_output()
     except Exception as e:
-        print(f"❌ Error in transcription: {e}")
+        print(f"[ERROR] Error in transcription: {e}")
         traceback.print_exc()
         flush_output()
 
@@ -91,7 +91,7 @@ def process_audio(
             except queue.Empty:
                 continue
             except Exception as e:
-                print(f"❌ Error in audio processing: {e}")
+                print(f"[ERROR] Error in audio processing: {e}")
                 traceback.print_exc()
                 flush_output()
             
@@ -100,7 +100,7 @@ def process_audio(
             try:
                 future.result()
             except Exception as e:
-                print(f"❌ Error in future result: {e}")
+                print(f"[ERROR] Error in future result: {e}")
                 flush_output()
 
 
@@ -125,26 +125,26 @@ def record_audio(
             channels=channels,
             callback=audio_callback
         ):
-            print("✅ Microphone stream initialized... (Press Ctrl+C to stop)")
+            print("[AUDIO] Microphone stream initialized... (Press Ctrl+C to stop)")
             print("=" * 50)
             flush_output()
             stop_event.wait()
     except Exception as e:
-        print(f"❌ Error in audio recording: {e}")
+        print(f"[ERROR] Error in audio recording: {e}")
         traceback.print_exc()
         flush_output()
 
 
 class StandaloneLiveTranscriber:
     def __init__(self):
-        print("🚀 Starting Standalone Whisper Transcription")
+        print("[INIT] Starting Standalone Whisper Transcription")
         flush_output()
         
         try:
             with open("config.yaml", "r") as f:
                 config = yaml.safe_load(f)
             
-            print("✅ Configuration loaded successfully")
+            print("[CONFIG] Configuration loaded successfully")
             flush_output()
             
             # audio settings
@@ -164,16 +164,16 @@ class StandaloneLiveTranscriber:
 
             # check that the model paths exist
             if not os.path.exists(self.encoder_path):
-                print(f"❌ Encoder model not found at {self.encoder_path}")
+                print(f"[ERROR] Encoder model not found at {self.encoder_path}")
                 flush_output()
                 sys.exit(f"Encoder model not found at {self.encoder_path}.")
                 
             if not os.path.exists(self.decoder_path):
-                print(f"❌ Decoder model not found at {self.decoder_path}")
+                print(f"[ERROR] Decoder model not found at {self.decoder_path}")
                 flush_output()
                 sys.exit(f"Decoder model not found at {self.decoder_path}.")
 
-            print("✅ Model files found")
+            print("[FILES] Model files found")
             flush_output()
 
             # initialize the model
@@ -182,7 +182,7 @@ class StandaloneLiveTranscriber:
             
             self.model = StandaloneWhisperModel(self.encoder_path, self.decoder_path)
             
-            print("✅ Model loaded successfully!")
+            print("[MODEL] Model loaded successfully!")
             flush_output()
 
             # initialize the audio queue and stop event
@@ -190,7 +190,7 @@ class StandaloneLiveTranscriber:
             self.stop_event = threading.Event()
             
         except Exception as e:
-            print(f"❌ Error during initialization: {e}")
+            print(f"[ERROR] Error during initialization: {e}")
             traceback.print_exc()
             flush_output()
             sys.exit(1)
@@ -241,7 +241,7 @@ class StandaloneLiveTranscriber:
                 process_thread.join()
                 
         except Exception as e:
-            print(f"❌ Error during execution: {e}")
+            print(f"[ERROR] Error during execution: {e}")
             traceback.print_exc()
             flush_output()
 
