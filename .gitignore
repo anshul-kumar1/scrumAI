@@ -1,2 +1,4 @@
 node_modules
 .cursor
+.env
+config.env

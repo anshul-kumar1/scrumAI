@@ -23,11 +23,14 @@ class ScrumAIApp {
         this.uiController = null;
         this.notionIntegration = notionIntegration;
         
-        // Notion API credentials
+        // Notion API credentials - loaded from environment variables
         this.notionConfig = {
-            apiKey: "ntn_b21836603815tHxhJd8M44AeLsp2bAHgpqbmNVnlMaE3Sg",
-            parentPageId: "26e08228035d805ca45ac47eac1b3849"
+            apiKey: null,
+            parentPageId: null
         };
+        
+        // Load Notion credentials from environment
+        this.loadNotionCredentials();
         
         // Application state
         this.state = {
@@ -37,6 +40,33 @@ class ScrumAIApp {
             activeTab: 'keywords',
             isPostMeeting: false
         };
+    }
+
+    /**
+     * Load Notion credentials from environment variables
+     */
+    loadNotionCredentials() {
+        try {
+            // Try to get environment variables from electronAPI if available
+            if (window.electronAPI && window.electronAPI.getEnvVar) {
+                this.notionConfig.apiKey = window.electronAPI.getEnvVar('NOTION_API_KEY');
+                this.notionConfig.parentPageId = window.electronAPI.getEnvVar('NOTION_PARENT_PAGE_ID');
+            }
+            
+            // Fallback: check if we're in a development environment with direct access
+            if (!this.notionConfig.apiKey && typeof process !== 'undefined' && process.env) {
+                this.notionConfig.apiKey = process.env.NOTION_API_KEY;
+                this.notionConfig.parentPageId = process.env.NOTION_PARENT_PAGE_ID;
+            }
+            
+            if (!this.notionConfig.apiKey || !this.notionConfig.parentPageId) {
+                console.warn('Notion credentials not found in environment variables');
+            } else {
+                console.log('Notion credentials loaded from environment variables');
+            }
+        } catch (error) {
+            console.warn('Failed to load Notion credentials from environment:', error.message);
+        }
     }
 
     /**

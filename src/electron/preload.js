@@ -16,7 +16,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // System information
   platform: process.platform,
-  arch: process.arch
+  arch: process.arch,
+  
+  // Environment variables (securely exposed)
+  getEnvVar: (key) => {
+    // Only expose specific environment variables for security
+    const allowedKeys = ['NOTION_API_KEY', 'NOTION_PARENT_PAGE_ID', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+    if (allowedKeys.includes(key)) {
+      return process.env[key];
+    }
+    return undefined;
+  }
 });
 
 // Debug: Log that electronAPI is available

@@ -34,6 +34,7 @@
   "dependencies": {
     "@notionhq/client": "^5.1.0",
     "@supabase/supabase-js": "^2.38.0",
+    "dotenv": "^17.2.2",
     "node-record-lpcm16": "^1.0.1",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",

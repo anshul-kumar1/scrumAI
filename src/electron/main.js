@@ -11,6 +11,35 @@
 
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+// Load environment variables
+function loadEnvironmentVariables() {
+  const envPath = path.join(__dirname, '../../config.env');
+  
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const lines = envContent.split('\n');
+    
+    lines.forEach(line => {
+      line = line.trim();
+      if (line && !line.startsWith('#')) {
+        const [key, ...valueParts] = line.split('=');
+        if (key && valueParts.length > 0) {
+          const value = valueParts.join('=');
+          process.env[key.trim()] = value.trim();
+        }
+      }
+    });
+    
+    console.log('Environment variables loaded successfully');
+  } else {
+    console.warn('config.env file not found. Please create it with your API keys.');
+  }
+}
+
+// Load environment variables before creating the window
+loadEnvironmentVariables();
 
 // Keep a global reference of the window object
 let mainWindow;

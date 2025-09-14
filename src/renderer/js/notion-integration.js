@@ -17,20 +17,54 @@ export class NotionIntegration {
         this.client = null;
         this.isInitialized = false;
         
-        // API credentials - hardcoded for this demo
-        this.apiKey = "ntn_b21836603815tHxhJd8M44AeLsp2bAHgpqbmNVnlMaE3Sg";
-        this.parentPageId = "26e08228035d805ca45ac47eac1b3849";
+        // API credentials - loaded from environment variables
+        this.apiKey = null;
+        this.parentPageId = null;
         
-        // Auto-initialize with hardcoded credentials
+        // Load credentials from environment
+        this.loadCredentials();
+        
+        // Auto-initialize if credentials are available
         this.autoInitialize();
     }
     
     /**
-     * Auto-initialize with hardcoded credentials
+     * Load credentials from environment variables
+     */
+    loadCredentials() {
+        try {
+            // Try to get environment variables from electronAPI if available
+            if (window.electronAPI && window.electronAPI.getEnvVar) {
+                this.apiKey = window.electronAPI.getEnvVar('NOTION_API_KEY');
+                this.parentPageId = window.electronAPI.getEnvVar('NOTION_PARENT_PAGE_ID');
+            }
+            
+            // Fallback: check if we're in a development environment with direct access
+            if (!this.apiKey && typeof process !== 'undefined' && process.env) {
+                this.apiKey = process.env.NOTION_API_KEY;
+                this.parentPageId = process.env.NOTION_PARENT_PAGE_ID;
+            }
+            
+            if (!this.apiKey || !this.parentPageId) {
+                console.warn('Notion credentials not found in environment variables');
+            } else {
+                console.log('Notion credentials loaded from environment variables');
+            }
+        } catch (error) {
+            console.warn('Failed to load Notion credentials from environment:', error.message);
+        }
+    }
+    
+    /**
+     * Auto-initialize with environment credentials
      */
     async autoInitialize() {
         try {
-            await this.initialize();
+            if (this.apiKey && this.parentPageId) {
+                await this.initialize();
+            } else {
+                console.warn('Cannot auto-initialize: Missing Notion credentials');
+            }
         } catch (error) {
             console.warn('Auto-initialization failed:', error.message);
         }
