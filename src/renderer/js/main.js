@@ -155,6 +155,15 @@ class ScrumAIApp {
             this.exportToNotion('strategy');
         });
         
+        // GitHub export buttons
+        document.getElementById('export-notes-github').addEventListener('click', () => {
+            this.exportToGitHub('notes');
+        });
+        
+        document.getElementById('export-strategy-github').addEventListener('click', () => {
+            this.exportToGitHub('strategy');
+        });
+        
         // Edit/Save buttons for meeting notes
         document.getElementById('edit-notes-btn').addEventListener('click', () => {
             this.toggleEditMode('notes');
@@ -651,6 +660,82 @@ class ScrumAIApp {
             // Show error notification
             this.showNotification(
                 `Failed to export to Notion: ${error.message}`,
+                'error'
+            );
+        } finally {
+            // Reset button after delay
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 3000);
+        }
+    }
+
+    /**
+     * Export content to GitHub as an issue
+     */
+    async exportToGitHub(contentType) {
+        const button = document.getElementById(`export-${contentType}-github`);
+        const originalText = button.innerHTML;
+        
+        try {
+            // Show loading state
+            button.innerHTML = '<span class="btn-icon">⏳</span>Exporting...';
+            button.disabled = true;
+            
+            // Get content based on type
+            let content;
+            if (contentType === 'notes') {
+                const notesElement = document.getElementById('notes-content');
+                content = notesElement.textContent || notesElement.innerText || '';
+            } else if (contentType === 'strategy') {
+                const strategyElement = document.getElementById('strategy-content');
+                content = strategyElement.textContent || strategyElement.innerText || '';
+            }
+            
+            if (!content || content.trim() === '') {
+                throw new Error('No content available to export');
+            }
+            
+            // Parse content - first line as title, rest as body
+            const lines = content.split('\n').filter(line => line.trim() !== '');
+            const title = lines[0] || `${contentType === 'notes' ? 'Meeting Notes' : 'Strategy & Actions'} - ${new Date().toLocaleDateString()}`;
+            const body = lines.slice(1).join('\n') || content;
+            
+            // Check if GitHub API is available
+            if (!window.electronAPI || !window.electronAPI.createGithubIssue) {
+                throw new Error('GitHub integration is not available');
+            }
+            
+            // Export to GitHub
+            console.log(`Exporting ${contentType} to GitHub...`);
+            const result = await window.electronAPI.createGithubIssue({ title, body });
+            
+            if (result.success) {
+                // Show success message
+                button.innerHTML = '<span class="btn-icon">✅</span>Exported!';
+                
+                // Show success notification with link
+                this.showNotificationWithLink(
+                    `${contentType === 'notes' ? 'Meeting Notes' : 'Strategy & Actions'} exported to GitHub successfully!`,
+                    'success',
+                    result.data.issueUrl
+                );
+                
+                console.log('Successfully exported to GitHub:', result.data.issueUrl);
+            } else {
+                throw new Error(result.error || 'Export failed - no success response from GitHub');
+            }
+            
+        } catch (error) {
+            console.error('Failed to export to GitHub:', error);
+            
+            // Show error state
+            button.innerHTML = '<span class="btn-icon">❌</span>Failed';
+            
+            // Show error notification
+            this.showNotification(
+                `Failed to export to GitHub: ${error.message}`,
                 'error'
             );
         } finally {

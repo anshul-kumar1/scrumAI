@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startMeeting: (meetingData) => ipcRenderer.invoke('start-meeting', meetingData),
   stopMeeting: () => ipcRenderer.invoke('stop-meeting'),
   
+  // GitHub integration
+  createGithubIssue: (issueData) => ipcRenderer.invoke('create-github-issue', issueData),
+  
   // System information
   platform: process.platform,
   arch: process.arch,

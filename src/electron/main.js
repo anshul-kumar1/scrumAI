@@ -12,6 +12,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 
 // Load environment variables
 function loadEnvironmentVariables() {
@@ -43,6 +44,15 @@ loadEnvironmentVariables();
 
 // Keep a global reference of the window object
 let mainWindow;
+
+// GitHub Integration Configuration - loaded from environment variables
+function getGitHubConfig() {
+  return {
+    token: process.env.GITHUB_TOKEN,
+    owner: process.env.GITHUB_OWNER || 'anshul-kumar1',
+    repo: process.env.GITHUB_REPO || 'scrumAI'
+  };
+}
 
 /**
  * Create the main application window
@@ -95,6 +105,92 @@ ipcMain.handle('stop-meeting', async (event) => {
   console.log('Stopping meeting');
   return { success: true };
 });
+
+// GitHub issue creation handler
+ipcMain.handle('create-github-issue', async (event, issueData) => {
+  console.log('Creating GitHub issue:', issueData);
+  
+  try {
+    const result = await createGitHubIssue(issueData.title, issueData.body);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Failed to create GitHub issue:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+/**
+ * GitHub API Integration
+ */
+function createGitHubIssue(title, body) {
+  return new Promise((resolve, reject) => {
+    const githubConfig = getGitHubConfig();
+    
+    // Validate GitHub configuration
+    if (!githubConfig.token) {
+      reject(new Error('GitHub token not found in environment variables. Please set GITHUB_TOKEN in config.env'));
+      return;
+    }
+    
+    const data = JSON.stringify({
+      title: title,
+      body: body
+    });
+
+    const options = {
+      hostname: 'api.github.com',
+      port: 443,
+      path: `/repos/${githubConfig.owner}/${githubConfig.repo}/issues`,
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${githubConfig.token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+        'Content-Length': data.length,
+        'User-Agent': 'ScrumAI-Meeting-Assistant'
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let responseData = '';
+
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          const parsedData = JSON.parse(responseData);
+          
+          if (res.statusCode === 201) {
+            console.log('GitHub issue created successfully:', parsedData.html_url);
+            resolve({
+              issueNumber: parsedData.number,
+              issueUrl: parsedData.html_url,
+              title: parsedData.title
+            });
+          } else {
+            console.error('GitHub API error:', res.statusCode, parsedData);
+            console.error('Request URL was:', `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues`);
+            console.error('Request headers were:', options.headers);
+            reject(new Error(`GitHub API error: ${res.statusCode} - ${parsedData.message || 'Unknown error'}`));
+          }
+        } catch (parseError) {
+          console.error('Failed to parse GitHub API response:', parseError);
+          reject(new Error('Failed to parse GitHub API response'));
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      console.error('GitHub API request error:', error);
+      reject(new Error(`GitHub API request failed: ${error.message}`));
+    });
+
+    req.write(data);
+    req.end();
+  });
+}
 
 /**
  * App Event Handlers
