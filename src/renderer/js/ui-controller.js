@@ -222,7 +222,7 @@ export class UIController {
         const html = sortedKeywords.map(([word, data]) => `
             <div class="keyword-item ${data.importance}-importance" 
                  data-keyword="${word}" 
-                 onclick="window.uiController.showKeywordTooltip(this, '${word}')">
+                 onclick="window.uiController.selectKeyword(this, '${word}')">
                 ${this.escapeHtml(word)}
                 ${data.frequency > 1 ? `<span class="keyword-frequency">${data.frequency}</span>` : ''}
             </div>
@@ -232,70 +232,67 @@ export class UIController {
     }
 
     /**
-     * Show tooltip with keyword information
+     * Select a keyword and show its details below
      */
-    showKeywordTooltip(element, word) {
-        // Remove existing tooltips
-        document.querySelectorAll('.keyword-tooltip').forEach(tooltip => tooltip.remove());
+    selectKeyword(element, word) {
+        // Remove selection from all keywords
+        document.querySelectorAll('.keyword-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        // Add selection to clicked keyword
+        element.classList.add('selected');
         
         const keywordData = this.keywords.get(word);
         if (!keywordData) return;
         
-        const tooltip = document.createElement('div');
-        tooltip.className = 'keyword-tooltip visible';
+        const detailsPanel = document.getElementById('keyword-details');
+        if (!detailsPanel) return;
         
-        const recentContext = keywordData.contexts[keywordData.contexts.length - 1];
-        const totalMentions = keywordData.frequency;
-        const importance = keywordData.importance;
         const definition = keywordData.definition || 'No definition available';
         const relatedTerms = keywordData.relatedTerms || [];
+        const totalMentions = keywordData.frequency;
+        const importance = keywordData.importance;
         
-        // Create related terms HTML
-        const relatedTermsHtml = relatedTerms.length > 0 
-            ? `<div class="tooltip-related">
-                <strong>Related:</strong> ${relatedTerms.map(term => `<span class="related-term">${this.escapeHtml(term)}</span>`).join(', ')}
-               </div>`
+        // Create contexts HTML
+        const contextsHtml = keywordData.contexts.length > 0
+            ? `<h5>Recent Mentions</h5>
+               ${keywordData.contexts.slice(-3).map(context => 
+                   `<div class="context-example">"${this.escapeHtml(context)}"</div>`
+               ).join('')}`
             : '';
         
-        // Show multiple contexts if available
-        const contextsHtml = keywordData.contexts.length > 1
-            ? `<div class="tooltip-contexts">
-                <strong>Recent mentions:</strong>
-                ${keywordData.contexts.slice(-2).map(context => 
-                    `<div class="context-item">"${this.escapeHtml(context.substring(0, 80))}${context.length > 80 ? '...' : ''}"</div>`
-                ).join('')}
-               </div>`
-            : `<div class="tooltip-context">"${this.escapeHtml(recentContext.substring(0, 100))}${recentContext.length > 100 ? '...' : ''}"</div>`;
+        // Create related terms HTML
+        const relatedTermsHtml = relatedTerms.length > 0
+            ? `<h5>Related Terms</h5>
+               ${relatedTerms.map(term => `<span class="related-tag">${this.escapeHtml(term)}</span>`).join('')}`
+            : '';
         
-        tooltip.innerHTML = `
-            <div class="tooltip-title">${this.escapeHtml(word)}</div>
-            <div class="tooltip-definition">${this.escapeHtml(definition)}</div>
-            ${contextsHtml}
-            ${relatedTermsHtml}
-            <div class="tooltip-stats">
-                <div class="tooltip-stat">
-                    <div class="tooltip-stat-value">${totalMentions}</div>
-                    <div>Mentions</div>
-                </div>
-                <div class="tooltip-stat">
-                    <div class="tooltip-stat-value">${importance}</div>
-                    <div>Priority</div>
-                </div>
-                <div class="tooltip-stat">
-                    <div class="tooltip-stat-value">${keywordData.contexts.length}</div>
-                    <div>Contexts</div>
-                </div>
+        // Update the details panel
+        detailsPanel.querySelector('.details-title').textContent = word;
+        detailsPanel.querySelector('.details-definition').textContent = definition;
+        detailsPanel.querySelector('.details-contexts').innerHTML = contextsHtml;
+        detailsPanel.querySelector('.details-related').innerHTML = relatedTermsHtml;
+        detailsPanel.querySelector('.details-stats').innerHTML = `
+            <div class="detail-stat">
+                <div class="detail-stat-value">${totalMentions}</div>
+                <div class="detail-stat-label">Mentions</div>
+            </div>
+            <div class="detail-stat">
+                <div class="detail-stat-value">${importance}</div>
+                <div class="detail-stat-label">Priority</div>
+            </div>
+            <div class="detail-stat">
+                <div class="detail-stat-value">${keywordData.contexts.length}</div>
+                <div class="detail-stat-label">Contexts</div>
             </div>
         `;
         
-        element.appendChild(tooltip);
+        // Show the details panel
+        detailsPanel.classList.remove('hidden');
         
-        // Remove tooltip after 5 seconds (longer for richer content)
-        setTimeout(() => {
-            if (tooltip.parentNode) {
-                tooltip.remove();
-            }
-        }, 5000);
+        // Scroll the selected keyword into view
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
     /**
@@ -465,11 +462,17 @@ export class UIController {
         
         // Reset UI
         if (this.keywordsContainer) {
-            this.keywordsContainer.innerHTML = '<p class="placeholder-text">Start a meeting to see key topics and insights...</p>';
+            this.keywordsContainer.innerHTML = '<p class="placeholder-text">Start a meeting to see keywords...</p>';
         }
         
         if (this.recentSpeechContainer) {
             this.recentSpeechContainer.innerHTML = '<p class="placeholder-text">Recent words will appear here...</p>';
+        }
+        
+        // Hide details panel
+        const detailsPanel = document.getElementById('keyword-details');
+        if (detailsPanel) {
+            detailsPanel.classList.add('hidden');
         }
         
         // Reset stats

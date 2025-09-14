@@ -69,69 +69,34 @@
 
         <!-- Real-time Content Area -->
         <div class="content-grid">
-            <!-- Live Transcription -->
+            <!-- Keywords Panel -->
             <section class="transcription-panel">
-                <h2>Key Topics & Insights</h2>
                 <div class="transcription-header">
+                    <h2>Keywords</h2>
                     <div class="topic-stats">
                         <span class="stat-item">
                             <span class="stat-number" id="keyword-count">0</span>
                             <span class="stat-label">Keywords</span>
                         </span>
-                        <span class="stat-item">
-                            <span class="stat-number" id="topic-count">0</span>
-                            <span class="stat-label">Topics</span>
-                        </span>
                     </div>
-                    <button id="view-full-transcript" class="control-btn small secondary">View Full Text</button>
+                    <button id="view-full-transcript" class="control-btn small secondary">View Full</button>
                 </div>
                 
                 <div id="keywords-container" class="keywords-content">
-                    <p class="placeholder-text">Start a meeting to see key topics and insights...</p>
+                    <p class="placeholder-text">Start a meeting to see keywords...</p>
                 </div>
                 
-                <div class="recent-speech">
-                    <h3>Latest Speech</h3>
-                    <div id="recent-speech-text" class="recent-text">
-                        <p class="placeholder-text">Recent words will appear here...</p>
-                    </div>
+                <div id="keyword-details" class="keyword-details hidden">
+                    <h4 class="details-title"></h4>
+                    <div class="details-definition"></div>
+                    <div class="details-contexts"></div>
+                    <div class="details-related"></div>
+                    <div class="details-stats"></div>
                 </div>
                 
                 <div class="transcription-controls">
                     <button id="clear-keywords" class="control-btn small">Clear</button>
                     <button id="export-keywords" class="control-btn small">Export</button>
-                </div>
-            </section>
-
-            <!-- AI Insights Panel -->
-            <section class="insights-panel">
-                <h2>AI Insights</h2>
-                <div class="insights-tabs">
-                    <button class="tab-btn active" data-tab="sentiment">Sentiment</button>
-                    <button class="tab-btn" data-tab="keywords">Keywords</button>
-                    <button class="tab-btn" data-tab="action-items">Action Items</button>
-                </div>
-                
-                <div class="insights-content">
-                    <div id="sentiment-tab" class="tab-content active">
-                        <div class="sentiment-meter">
-                            <div class="sentiment-indicator" id="sentiment-indicator"></div>
-                            <span class="sentiment-label" id="sentiment-label">Neutral</span>
-                        </div>
-                        <div class="sentiment-history" id="sentiment-history"></div>
-                    </div>
-                    
-                    <div id="keywords-tab" class="tab-content">
-                        <div class="keywords-cloud" id="keywords-cloud">
-                            <p class="placeholder-text">Keywords will appear here during the meeting...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="action-items-tab" class="tab-content">
-                        <div class="action-items-list" id="action-items-list">
-                            <p class="placeholder-text">Action items will be detected automatically...</p>
-                        </div>
-                    </div>
                 </div>
             </section>
 
