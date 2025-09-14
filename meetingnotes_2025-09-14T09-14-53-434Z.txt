@@ -1,0 +1,136 @@
+Meeting Session: meeting_20250914_091452
+Started: 2025-09-14 09:14:53
+============================================================
+
+[09:14:59]: , it starts doing the transcripts and...
+[09:15:03]: , and then you'll get some keywords as well, you know, for.
+[09:15:07]: , whatever it can hear now in nearby and then we can
+[09:15:11]: , and then we want to open up.
+[09:15:15]: , but when you are trying to do a particular thing, you can do it in a particular way.
+[09:15:19]: , any kind of these two questions, right? More is.
+[09:15:26]: , so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so this is coming because, so
+[09:15:27]: , or anything in the system.
+[09:15:31]: , you know, like into our workspace chart.
+[09:15:35]: , like not able to send files basically, we're actually storing
+[09:15:39]: , in the workspace. No, I'm not anywhere.
+[09:15:43]: , essentially taking the buffer. Yes.
+[09:15:50]: , and we are saving it to a file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going to make a new file. And we're going
+[09:15:51]: , and we're just taking that entire thing whatever's in the...
+[09:15:55]: , and pass it to you. Okay, can you show me the where you're making.
+[09:15:59]: , I was just helping a team with sending files.
+[09:16:03]: , so this is like the base structure for it. Yeah, that's fine.
+[09:16:07]: , I need the request that you're making to the end. Oh, thank you.
+[09:16:11]: , but enough just one second before that we just want to ask users for my confirmation is.
+[09:16:15]: the there was this luck thing very which mentions the slugs so this is what we are doing.
+[09:16:19]: , given initially, to water.
+[09:16:23]: , so this is a.
+[09:16:27]: , so that's the slide right? This is like a workspace. You can also
+[09:16:31]: , but I also check it. I have put a script in. You can run in my repo.
+[09:16:35]: , and it's a source slash workspaces that will print out the workspace. So it'll actually tell you what the
+[09:16:39]: , like it's where your workspace is. I just have a great can write a direct file into the world.
+[09:16:43]: , no another team actually was trying that and it wasn't seeing the files yeah so what you
+[09:16:47]: , what you have to do is...
+[09:16:51]: , let me actually just show you in anything I want. So in the chat.
+[09:16:55]: , this is the end point that's being used.
+[09:16:59]: , you just need to add this section with attachments like that. So add...
+[09:17:03]: the next one.
+[09:17:07]: , just these pieces right here. The only thing you have to do is add
+[09:17:11]: , and the file name, it's going to be whatever you call it, then application.
+[09:17:15]: , and then do, so load in the content. So do.
+[09:17:19]: , so read it in and then dump it back as a string a contour.
+[09:17:23]: , and then attach that string there. I don't know why it's doing that. We test it.
+[09:17:27]: , but the other team got it working. So once you do that, so it doesn't recognize the
+[09:17:31]: , but it'll talk about the content. So if you have data that has
+[09:17:35]: , you know, there was video frames, right? You can then it'll have it in the
+[09:17:39]: , and the context one is generating. So, so, so, currently, we so,
+[09:17:43]: , and then I think that's what I would do.
+[09:17:47]: , we can just write your file and that file we can attach and send this to the workspace. Yeah.
+[09:17:51]: ' but if it's already in your code, you don't even put it in a file, you just need to pass this
+[09:17:55]: , and I'm not sure.
+[09:17:59]: , and you might not even have to do a file though. In your case, since it's already in the car.
+[09:18:03]: , and not stored in a file. It might even just make more sense to take your base message.
+[09:18:07]: , and then just like add a semicolon and the rest of the content.
+[09:18:11]: , but there is a store that it doesn't store it. Yeah, it's not storing it wasn't.
+[09:18:15]: , and it's not working. So there was a team where they loaded up files into the workspace like this.
+[09:18:19]: , so that's I see you guys have loaded stuff so I'm supposed to load this stuff into the water.
+[09:18:23]: , we couldn't get it to work. Yeah, so once it's saving and bet it's there.
+[09:18:27]: , and you can reference it. And it was working within anything on Lambda.
+[09:18:31]: , but then for some reason with that endpoint was not yet. Okay, so then really go back to try that three.
+[09:18:35]: , we're not able to see like when we go back to our channel or something we could utilize this information.
+[09:18:39]: , so here it's in there now.
+[09:18:43]: , but it sees it in the chat of anything else.
+[09:18:47]: , and it doesn't see it in the endpoint, so I don't know why it's not, and they don't...
+[09:18:51]: , only information they give you is this one thing. So if you...
+[09:18:55]: , using this we can only do like portion is like after a call ends or something like that.
+[09:18:59]: , but you want to do real-time analysis. Let's say, like...
+[09:19:03]: , and so that's what we're doing.
+[09:19:07]: , whatever transfer to there, we're sending that as... everything? Like, yeah, it's above.
+[09:19:11]: , yeah, so we want so then we can ask a real-time question.
+[09:19:15]: , and subscribe.
+[09:19:19]: the other way.
+[09:19:23]: The next question is, what is the best way to get the information?
+[09:19:27]: , or something to put the text in or just send it.
+[09:19:31]: , but it's not a little chunk of things. I mean, we're almost at the end now, so we don't want you to.
+[09:19:35]: , so waste too much time on this, but just kind of work with it so that you know,
+[09:19:39]: , and you know you're either passing in an attachment or just depending into the prompt and it'll, I'll be right back.
+[09:19:43]: , and I think that's the only way to do it.
+[09:19:47]: , but again, we're not going to take that into account. You stop it running out.
+[09:19:51]: , and of you all.
+[09:19:55]: , also in trying to integrate like a, you know, like documents and all of that.
+[09:20:02]: The next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that the next step is to make sure that
+[09:20:07]: , and I think that's what I was saying is you're supposed to be a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit more like a little bit
+[09:20:07]: , and we're going to be able to bring all of them into the workspace just like this.
+[09:20:10]: , and there's an APM I for that.
+[09:20:15]: , yes, yes, I did, right, so that's but that's what's not making sense to me.
+[09:20:18]: , there's another team who is doing that too.
+[09:20:23]: , I don't know where the API endpoint is, but there's one where you add the works. Oh, he's.
+[09:20:27]: , you upload them into that? You can work with those. I have a
+[09:20:30]: , and it wasn't working.
+[09:20:39]: , and I had a lot of people who were in the house, and I was like, what was wrong with that? Yeah, so it's not just you guys and I, I had a lot of people who were in the house, and I was like, what was wrong with that? Yeah, so it's not just you guys and I, I had a lot of people who were in the house, and I was like, what was wrong with that? Yeah, so it's not just you guys and I, I had a lot of people who were in the house, and I was like, what was wrong with that? Yeah, so it's not just you guys and I, I had a lot of people who were in the house, and I was like, what was wrong with that? Yeah, so it's not just you guys and I, I had a lot of people who were in the house, and I had a lot of people who were in the house, and I had a lot of people who were in the house, and I had a lot of people who were
+[09:20:40]: , and I'm not a good one.
+[09:20:43]: , and just works with that for you. So let's use that server. Yeah.
+[09:20:47]: , maybe it's how it says it's limitations right? Oh absolutely I mean it's this episode.
+[09:20:51]: , and active development. I know the guy who's building it, and we talked about it. So he
+[09:20:55]: , I was under the impressionist would work and then it's not working. So I figured out. Okay.
+[09:20:59]: , but today you guys are. For sure. For sure. Yeah. You'll be okay though. Yeah. Sure.
+[09:21:02]: , just cut it down a little bit, give it maybe some answer whatever. Yes. And.
+[09:21:06]: , and then we'll see you next week.
+[09:21:11]: , it's going to be spinning for a while. Thank you so much. Thank you so much. Thank you so much. Thank you.
+[09:21:15]: , I don't like to do it.
+[09:21:19]: , except the partition run. I forget I will do that.
+[09:21:23]: , and we will be able to see the question.
+[09:21:27]: , that's what I want. That's what I like. It's a problem.
+[09:21:31]: the other side.
+[09:21:35]: , what do you want?
+[09:21:39]: , just need to like, you know, like me do, like, bro, fajjawit.
+[09:21:43]: , sorry, sorry about it, sorry about the panel.
+[09:21:47]: , sorry, sorry, this is the right thing.
+[09:21:51]: , yeah so the thing is we have to talk about this we have to I think
+[09:21:55]: , sorry, so, like this apparently doesn't work, this job is not fixed.
+[09:21:59]: , so this documents thing is how you can.
+[09:22:03]: the other side.
+[09:22:07]: the next time.
+[09:22:11]: , it's not nice everything so it's alright but you can't run it so I'm out of here.
+[09:22:14]: , and run it here.
+[09:22:19]: the thing we merged with the
+[09:22:22]: , okay. So now we need to
+[09:22:26]: , but then I'm asking if you're required.
+[09:22:31]: , yeah yeah yeah yeah sure yeah I mean it already does it's okay.
+[09:22:35]: , because already there's a bug here and I want to fix this before I get into that.
+[09:22:41]: , because we can't test out the integration. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I do. I
+[09:22:43]: , because then it's like wrong.
+[09:22:50]: , you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you know, you
+[09:22:51]: , so I see the way I think.
+[09:22:55]: , but I have to say that you have to be a little bit more familiar.
+[09:22:59]: , and enjoy.
+[09:23:03]: , what are you saying?
+[09:23:07]: , okay. I thought I was going to say well.
+[09:23:16]: , yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah
+[09:23:21]: , and I'm going to be a little bit good.
+[09:23:24]: , what was the, the, the, the, the, the, the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the
+[09:23:25]: , this one right?
+[09:23:27]: , I'm Chad. Yeah. Yeah.
+[09:23:31]: , it's not that much.
+[09:23:35]: , as a convention.
+[09:23:39]: , I appreciate it.
+[09:23:43]: , it's something is working is fine, it's all I mean. There's a dispute with it, there's something that's stopping me.

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(if exist node_modules rmdir /s /q node_modules)",
+      "Bash(if exist package-lock.json del package-lock.json)",
+      "Bash(powershell:*)",
+      "Read(//c/Users/qc_de/simple-whisper-transcription/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

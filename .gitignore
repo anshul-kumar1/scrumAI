@@ -1,3 +1,6 @@
 node_modules
 .cursor
+*.onnx
+whisper/models
+models
 config.env

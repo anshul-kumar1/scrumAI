@@ -19,6 +19,7 @@
     
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/chat.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -75,6 +76,10 @@
                         <button class="tab-btn" data-tab="transcript">
                             <span class="tab-icon">📝</span>
                             Transcript
+                        </button>
+                        <button class="tab-btn" data-tab="chat">
+                            <span class="tab-icon">💬</span>
+                            Chat
                         </button>
                         <div class="post-meeting-tabs hidden">
                             <button class="tab-btn active" data-tab="notes">
@@ -171,6 +176,25 @@
                             </div>
                             <div id="strategy-content" class="strategy-content" contenteditable="false">
                                 <p class="placeholder-text">Strategy and action items will appear here after the meeting ends...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Tab -->
+                    <div id="chat-tab" class="tab-content">
+                        <div class="chat-container">
+                            <div id="chat-messages" class="chat-messages">
+                                <div class="chat-welcome">
+                                    <p>💬 AnythingLLM Assistant</p>
+                                    <p class="chat-subtitle">Ask questions about your meeting or anything else!</p>
+                                </div>
+                            </div>
+                            <div class="chat-input-container">
+                                <input type="text" id="chat-input" class="chat-input" placeholder="Type your message..." />
+                                <button id="chat-send" class="chat-send-btn" disabled>Send</button>
+                            </div>
+                            <div class="chat-status">
+                                <span id="chat-status-text" class="chat-status-text">Disconnected</span>
                             </div>
                         </div>
                     </div>

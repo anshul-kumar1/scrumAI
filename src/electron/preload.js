@@ -13,6 +13,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Meeting management
   startMeeting: (meetingData) => ipcRenderer.invoke('start-meeting', meetingData),
   stopMeeting: () => ipcRenderer.invoke('stop-meeting'),
+
+  // Transcript management
+  saveTranscript: (filename) => ipcRenderer.invoke('save-transcript', filename),
+  getFullTranscript: () => ipcRenderer.invoke('get-full-transcript'),
+
+  // Event listeners for Whisper events
+  onWhisperTranscript: (callback) => ipcRenderer.on('whisper-transcript', callback),
+  onWhisperError: (callback) => ipcRenderer.on('whisper-error', callback),
+  onWhisperStatus: (callback) => ipcRenderer.on('whisper-status', callback),
+
+  // Chatbot management
+  initializeChatbot: () => ipcRenderer.invoke('initialize-chatbot'),
+  startChatbot: () => ipcRenderer.invoke('start-chatbot'),
+  stopChatbot: () => ipcRenderer.invoke('stop-chatbot'),
+  sendChatMessage: (message) => ipcRenderer.invoke('send-chat-message', message),
+
+  // Event listeners for Chatbot events
+  onChatbotResponse: (callback) => ipcRenderer.on('chatbot-response', callback),
+  onChatbotError: (callback) => ipcRenderer.on('chatbot-error', callback),
+  onChatbotStatus: (callback) => ipcRenderer.on('chatbot-status', callback),
+
+  // Remove event listeners
+  removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
   
   // GitHub integration
   createGithubIssue: (issueData) => ipcRenderer.invoke('create-github-issue', issueData),
