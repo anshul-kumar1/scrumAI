@@ -306,8 +306,11 @@ html, body {
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    min-width: 140px;
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
     white-space: nowrap;
+    box-sizing: border-box;
 }
 
 /* Specific styling for live tabs to maintain flex behavior */
@@ -316,13 +319,28 @@ html, body {
     border-radius: 0;
     border: none;
     background: transparent;
+    width: auto;
     min-width: auto;
+    max-width: none;
 }
 
 /* Post-meeting tabs get special styling */
 .post-meeting-tabs .tab-btn {
     flex: none;
     margin: 2px;
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
+}
+
+/* Ensure consistent button sizing in all window states */
+.post-meeting-tabs .tab-btn,
+.post-meeting-tabs .tab-btn:active,
+.post-meeting-tabs .tab-btn:hover,
+.post-meeting-tabs .tab-btn:focus {
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
 }
 
 /* Live tabs hover states */
@@ -1530,10 +1548,19 @@ html, body {
     padding-left: 80px; /* Account for macOS traffic lights */
 }
 
-/* Responsive adjustments */
-@media (max-width: 1200px) {
+/* Ensure consistent sizing for larger screens and fullscreen mode */
+@media (min-width: 769px) {
+    .post-meeting-tabs .tab-btn {
+        width: 160px !important;
+        min-width: 160px !important;
+        max-width: 160px !important;
+    }
+}
+
+/* Responsive adjustments - Only apply to very small screens */
+@media (max-width: 768px) {
     .content-grid {
-        grid-template-columns: 1fr 280px;
+        grid-template-columns: 1fr;
     }
     
     .participants-panel {
@@ -1546,13 +1573,24 @@ html, body {
     }
     
     .post-meeting-tabs .tab-btn {
-        min-width: 120px;
+        width: 140px;
+        min-width: 140px;
+        max-width: 140px;
         padding: 10px 16px;
         font-size: 13px;
     }
+    
+    .header-controls {
+        gap: 8px;
+    }
+    
+    .header-controls .control-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 480px) {
     .content-grid {
         grid-template-columns: 1fr;
     }
@@ -1568,17 +1606,9 @@ html, body {
     }
     
     .post-meeting-tabs .tab-btn {
-        min-width: 200px;
-        width: auto;
-    }
-    
-    .header-controls {
-        gap: 8px;
-    }
-    
-    .header-controls .control-btn {
-        padding: 8px 12px;
-        font-size: 12px;
+        width: 160px;
+        min-width: 160px;
+        max-width: 160px;
     }
 }
 
