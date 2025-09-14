@@ -61,34 +61,50 @@
 
         <!-- Real-time Content Area -->
         <div class="content-grid">
-            <!-- Keywords Panel -->
-            <section class="transcription-panel">
-                <div class="transcription-header">
-                    <h2>Keywords</h2>
-                    <div class="topic-stats">
-                        <span class="stat-item">
-                            <span class="stat-number" id="keyword-count">0</span>
-                            <span class="stat-label">Keywords</span>
-                        </span>
+            <!-- Content Panel -->
+            <section class="content-panel">
+                <!-- Tab Navigation -->
+                <div class="tab-navigation">
+                    <button class="tab-btn active" data-tab="keywords">
+                        <span class="tab-icon">🏷️</span>
+                        Keywords
+                        <span class="tab-count" id="keyword-count">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="transcript">
+                        <span class="tab-icon">📝</span>
+                        Transcript
+                    </button>
+                </div>
+                
+                <!-- Tab Content -->
+                <div class="tab-content-container">
+                    <!-- Keywords Tab -->
+                    <div id="keywords-tab" class="tab-content active">
+                        <div id="keywords-container" class="keywords-content">
+                            <p class="placeholder-text">Start a meeting to see keywords...</p>
+                        </div>
+                        
+                        <div id="keyword-details" class="keyword-details hidden">
+                            <h4 class="details-title"></h4>
+                            <div class="details-definition"></div>
+                            <div class="details-contexts"></div>
+                            <div class="details-related"></div>
+                            <div class="details-stats"></div>
+                        </div>
                     </div>
-                    <button id="view-full-transcript" class="control-btn small secondary">View Full</button>
+                    
+                    <!-- Transcript Tab -->
+                    <div id="transcript-tab" class="tab-content">
+                        <div id="transcript-content" class="transcript-content">
+                            <p class="placeholder-text">Start a meeting to see transcript...</p>
+                        </div>
+                    </div>
                 </div>
                 
-                <div id="keywords-container" class="keywords-content">
-                    <p class="placeholder-text">Start a meeting to see keywords...</p>
-                </div>
-                
-                <div id="keyword-details" class="keyword-details hidden">
-                    <h4 class="details-title"></h4>
-                    <div class="details-definition"></div>
-                    <div class="details-contexts"></div>
-                    <div class="details-related"></div>
-                    <div class="details-stats"></div>
-                </div>
-                
-                <div class="transcription-controls">
-                    <button id="clear-keywords" class="control-btn small">Clear</button>
-                    <button id="export-keywords" class="control-btn small">Export</button>
+                <!-- Controls -->
+                <div class="content-controls">
+                    <button id="clear-content" class="control-btn small">Clear</button>
+                    <button id="export-content" class="control-btn small">Export</button>
                 </div>
             </section>
 

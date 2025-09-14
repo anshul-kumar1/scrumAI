@@ -25,7 +25,8 @@ class ScrumAIApp {
         this.state = {
             isMeetingActive: false,
             isMuted: false,
-            participants: []
+            participants: [],
+            activeTab: 'keywords'
         };
     }
 
@@ -83,13 +84,20 @@ class ScrumAIApp {
             this.toggleMute();
         });
         
-        // Export functionality
-        document.getElementById('export-keywords').addEventListener('click', () => {
-            this.exportTranscription();
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchTab(e.target.dataset.tab || e.target.closest('.tab-btn').dataset.tab);
+            });
         });
         
-        document.getElementById('clear-keywords').addEventListener('click', () => {
-            this.clearTranscription();
+        // Export functionality
+        document.getElementById('export-content').addEventListener('click', () => {
+            this.exportContent();
+        });
+        
+        document.getElementById('clear-content').addEventListener('click', () => {
+            this.clearContent();
         });
         
         // Window events
@@ -134,6 +142,9 @@ class ScrumAIApp {
             
             // Initialize mock keywords for UI development
             this.uiController.initializeMockKeywords();
+            
+            // Initialize mock transcript
+            this.initializeMockTranscript();
             
             console.log('Meeting started successfully');
             
@@ -259,15 +270,40 @@ class ScrumAIApp {
     /**
      * Utility methods
      */
-
-    exportTranscription() {
-        const transcription = this.uiController.getTranscriptionText();
-        // Implementation for exporting transcription
-        console.log('Exporting transcription:', transcription);
+    switchTab(tabName) {
+        if (!tabName) return;
+        
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === `${tabName}-tab`);
+        });
+        
+        this.state.activeTab = tabName;
+        console.log(`Switched to ${tabName} tab`);
     }
 
-    clearTranscription() {
-        this.uiController.clearTranscription();
+    exportContent() {
+        if (this.state.activeTab === 'keywords') {
+            const transcription = this.uiController.getTranscriptionText();
+            console.log('Exporting keywords:', transcription);
+        } else if (this.state.activeTab === 'transcript') {
+            const transcript = document.getElementById('transcript-content').textContent;
+            console.log('Exporting transcript:', transcript);
+        }
+    }
+
+    clearContent() {
+        if (this.state.activeTab === 'keywords') {
+            this.uiController.clearTranscription();
+        } else if (this.state.activeTab === 'transcript') {
+            const transcriptContent = document.getElementById('transcript-content');
+            transcriptContent.innerHTML = '<p class="placeholder-text">Start a meeting to see transcript...</p>';
+        }
     }
 
     /**
@@ -301,6 +337,54 @@ class ScrumAIApp {
                 this.uiController.simulateParticipantActivity();
             }
         }, 5000);
+    }
+
+    /**
+     * Initialize mock transcript for UI development
+     */
+    initializeMockTranscript() {
+        const transcriptContent = document.getElementById('transcript-content');
+        const mockTranscript = `
+[00:00:15] John Smith: Good morning everyone, thanks for joining today's sprint planning meeting.
+
+[00:00:22] Sarah Johnson: Morning! I've prepared the user stories for review.
+
+[00:00:35] Mike Chen: Great, I've also updated the technical requirements document.
+
+[00:00:48] John Smith: Perfect. Let's start by reviewing the project timeline and our current velocity.
+
+[00:01:12] Alex Rodriguez: Based on last sprint, our velocity was 32 story points. Should we plan for similar capacity?
+
+[00:01:28] Sarah Johnson: I think we can be a bit more ambitious. The team has been working well together.
+
+[00:01:45] Mike Chen: Agreed. The technical debt cleanup from last sprint should help us move faster.
+
+[00:02:03] John Smith: Excellent. Let's aim for 35-38 story points this sprint. Sarah, can you walk us through the priority user stories?
+
+[00:02:20] Sarah Johnson: Absolutely. The top priority is the user authentication system. It's critical for the Q2 release.
+
+[00:02:38] Alex Rodriguez: I can take the lead on the authentication API. I have experience with OAuth implementations.
+
+[00:02:55] Mike Chen: I'll handle the frontend integration and user interface components.
+
+[00:03:12] John Smith: Great collaboration. What about the database migrations needed for this feature?
+
+[00:03:28] Alex Rodriguez: I've already drafted the migration scripts. They should be ready for review by tomorrow.
+
+[00:03:45] Sarah Johnson: Perfect. The next priority item is the client dashboard improvements.
+
+[00:04:02] Mike Chen: I've been working on the wireframes. The new layout should improve user experience significantly.
+
+[00:04:20] John Smith: Sounds promising. Any technical challenges we should be aware of?
+
+[00:04:35] Alex Rodriguez: The main challenge will be maintaining backwards compatibility with existing client data.
+
+[00:04:52] Sarah Johnson: We'll need to coordinate with the QA team for comprehensive testing.
+
+[00:05:08] John Smith: Absolutely. I'll schedule a meeting with the QA team for tomorrow afternoon.
+        `.trim();
+        
+        transcriptContent.innerHTML = `<pre style="white-space: pre-wrap; margin: 0; font-family: inherit;">${mockTranscript}</pre>`;
     }
 
     /**
