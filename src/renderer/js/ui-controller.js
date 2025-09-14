@@ -247,10 +247,31 @@ export class UIController {
         const recentContext = keywordData.contexts[keywordData.contexts.length - 1];
         const totalMentions = keywordData.frequency;
         const importance = keywordData.importance;
+        const definition = keywordData.definition || 'No definition available';
+        const relatedTerms = keywordData.relatedTerms || [];
+        
+        // Create related terms HTML
+        const relatedTermsHtml = relatedTerms.length > 0 
+            ? `<div class="tooltip-related">
+                <strong>Related:</strong> ${relatedTerms.map(term => `<span class="related-term">${this.escapeHtml(term)}</span>`).join(', ')}
+               </div>`
+            : '';
+        
+        // Show multiple contexts if available
+        const contextsHtml = keywordData.contexts.length > 1
+            ? `<div class="tooltip-contexts">
+                <strong>Recent mentions:</strong>
+                ${keywordData.contexts.slice(-2).map(context => 
+                    `<div class="context-item">"${this.escapeHtml(context.substring(0, 80))}${context.length > 80 ? '...' : ''}"</div>`
+                ).join('')}
+               </div>`
+            : `<div class="tooltip-context">"${this.escapeHtml(recentContext.substring(0, 100))}${recentContext.length > 100 ? '...' : ''}"</div>`;
         
         tooltip.innerHTML = `
             <div class="tooltip-title">${this.escapeHtml(word)}</div>
-            <div class="tooltip-context">"...${this.escapeHtml(recentContext)}..."</div>
+            <div class="tooltip-definition">${this.escapeHtml(definition)}</div>
+            ${contextsHtml}
+            ${relatedTermsHtml}
             <div class="tooltip-stats">
                 <div class="tooltip-stat">
                     <div class="tooltip-stat-value">${totalMentions}</div>
@@ -260,17 +281,21 @@ export class UIController {
                     <div class="tooltip-stat-value">${importance}</div>
                     <div>Priority</div>
                 </div>
+                <div class="tooltip-stat">
+                    <div class="tooltip-stat-value">${keywordData.contexts.length}</div>
+                    <div>Contexts</div>
+                </div>
             </div>
         `;
         
         element.appendChild(tooltip);
         
-        // Remove tooltip after 3 seconds
+        // Remove tooltip after 5 seconds (longer for richer content)
         setTimeout(() => {
             if (tooltip.parentNode) {
                 tooltip.remove();
             }
-        }, 3000);
+        }, 5000);
     }
 
     /**
@@ -623,6 +648,7 @@ export class UIController {
             <div class="participant-avatar">${participant.avatar || '👤'}</div>
             <div class="participant-info">
                 <span class="participant-name">${participant.name}</span>
+                <span class="participant-role">${participant.role || ''}</span>
                 <span class="participant-status">${participant.status || 'Listening'}</span>
             </div>
             <div class="participant-indicators">
@@ -673,23 +699,128 @@ export class UIController {
      * Initialize with mock keywords for UI development
      */
     initializeMockKeywords() {
-        // Add some demo keywords
+        // Add comprehensive demo keywords with rich context
         const mockKeywords = [
-            { text: 'project timeline', importance: 'high', frequency: 3 },
-            { text: 'budget constraints', importance: 'high', frequency: 2 },
-            { text: 'client requirements', importance: 'high', frequency: 4 },
-            { text: 'team collaboration', importance: 'medium', frequency: 2 },
-            { text: 'deadline pressure', importance: 'high', frequency: 1 },
-            { text: 'resource allocation', importance: 'medium', frequency: 1 },
-            { text: 'quality assurance', importance: 'medium', frequency: 1 },
-            { text: 'stakeholder feedback', importance: 'low', frequency: 1 }
+            { 
+                text: 'project timeline', 
+                importance: 'high', 
+                frequency: 4,
+                contexts: [
+                    'We need to review the project timeline for Q2 deliverables',
+                    'The project timeline has shifted due to client feedback',
+                    'Sarah mentioned concerns about the project timeline during standup'
+                ],
+                definition: 'A schedule of planned activities and milestones for project completion',
+                relatedTerms: ['milestone', 'deadline', 'deliverable', 'sprint']
+            },
+            { 
+                text: 'budget constraints', 
+                importance: 'high', 
+                frequency: 3,
+                contexts: [
+                    'Budget constraints are affecting our hiring plans',
+                    'We need to work within budget constraints for the next quarter'
+                ],
+                definition: 'Financial limitations that restrict project scope or resource allocation',
+                relatedTerms: ['cost', 'funding', 'resources', 'ROI']
+            },
+            { 
+                text: 'client requirements', 
+                importance: 'high', 
+                frequency: 5,
+                contexts: [
+                    'The client requirements have changed significantly since last week',
+                    'We need to clarify client requirements before proceeding',
+                    'Client requirements include mobile responsiveness and accessibility'
+                ],
+                definition: 'Specific needs and expectations defined by the client for project delivery',
+                relatedTerms: ['specifications', 'scope', 'deliverables', 'acceptance criteria']
+            },
+            { 
+                text: 'team collaboration', 
+                importance: 'medium', 
+                frequency: 2,
+                contexts: [
+                    'Team collaboration tools need to be updated',
+                    'Better team collaboration will improve our velocity'
+                ],
+                definition: 'The process of team members working together effectively to achieve common goals',
+                relatedTerms: ['communication', 'teamwork', 'coordination', 'synergy']
+            },
+            { 
+                text: 'technical debt', 
+                importance: 'high', 
+                frequency: 2,
+                contexts: [
+                    'We need to address technical debt in the authentication system',
+                    'Technical debt is slowing down our development velocity'
+                ],
+                definition: 'The implied cost of additional rework caused by choosing quick solutions over better approaches',
+                relatedTerms: ['refactoring', 'code quality', 'maintenance', 'architecture']
+            },
+            { 
+                text: 'user experience', 
+                importance: 'high', 
+                frequency: 3,
+                contexts: [
+                    'User experience testing revealed several pain points',
+                    'The new design significantly improves user experience',
+                    'Alex is leading the user experience optimization initiative'
+                ],
+                definition: 'The overall experience of a person using a product or service',
+                relatedTerms: ['UX', 'usability', 'interface', 'design', 'accessibility']
+            },
+            { 
+                text: 'sprint planning', 
+                importance: 'medium', 
+                frequency: 2,
+                contexts: [
+                    'Sprint planning meeting is scheduled for Monday morning',
+                    'We need better estimation during sprint planning'
+                ],
+                definition: 'A collaborative event where the team plans work to be performed during a sprint',
+                relatedTerms: ['agile', 'scrum', 'backlog', 'estimation', 'velocity']
+            },
+            { 
+                text: 'performance optimization', 
+                importance: 'medium', 
+                frequency: 1,
+                contexts: [
+                    'Performance optimization should be a priority for the next release'
+                ],
+                definition: 'The process of improving system efficiency and reducing resource consumption',
+                relatedTerms: ['speed', 'efficiency', 'scalability', 'monitoring']
+            },
+            { 
+                text: 'security audit', 
+                importance: 'high', 
+                frequency: 1,
+                contexts: [
+                    'The security audit identified several vulnerabilities'
+                ],
+                definition: 'A systematic evaluation of system security measures and potential vulnerabilities',
+                relatedTerms: ['vulnerability', 'compliance', 'encryption', 'authentication']
+            },
+            { 
+                text: 'stakeholder feedback', 
+                importance: 'medium', 
+                frequency: 2,
+                contexts: [
+                    'Stakeholder feedback has been generally positive',
+                    'We need to incorporate stakeholder feedback into the next iteration'
+                ],
+                definition: 'Input and opinions from individuals or groups with interest in the project outcome',
+                relatedTerms: ['requirements', 'approval', 'communication', 'expectations']
+            }
         ];
         
         mockKeywords.forEach(mock => {
             this.keywords.set(mock.text, {
                 frequency: mock.frequency,
                 importance: mock.importance,
-                contexts: [`Demo context for ${mock.text} discussion in meeting`],
+                contexts: mock.contexts,
+                definition: mock.definition,
+                relatedTerms: mock.relatedTerms,
                 lastSeen: Date.now()
             });
         });
@@ -723,28 +854,72 @@ export class UIController {
                 name: 'Sarah Johnson',
                 avatar: '👩‍💼',
                 status: 'Listening',
-                isActive: false
+                isActive: false,
+                role: 'Product Manager'
             },
             {
                 id: 'user-3',
                 name: 'Mike Chen',
                 avatar: '👨‍💻',
                 status: 'Taking notes',
-                isActive: false
+                isActive: false,
+                role: 'Senior Developer'
             },
             {
                 id: 'user-4',
                 name: 'Alex Rivera',
                 avatar: '👨‍🎨',
                 status: 'Listening',
-                isActive: false
+                isActive: false,
+                role: 'UI/UX Designer'
             },
             {
                 id: 'user-5',
                 name: 'Emily Davis',
                 avatar: '👩‍🔬',
                 status: 'Listening',
-                isActive: false
+                isActive: false,
+                role: 'Data Scientist'
+            },
+            {
+                id: 'user-6',
+                name: 'James Wilson',
+                avatar: '👨‍💼',
+                status: 'On mute',
+                isActive: false,
+                role: 'Project Manager'
+            },
+            {
+                id: 'user-7',
+                name: 'Lisa Park',
+                avatar: '👩‍💻',
+                status: 'Typing',
+                isActive: false,
+                role: 'Frontend Developer'
+            },
+            {
+                id: 'user-8',
+                name: 'David Kim',
+                avatar: '👨‍🔧',
+                status: 'Listening',
+                isActive: false,
+                role: 'DevOps Engineer'
+            },
+            {
+                id: 'user-9',
+                name: 'Maria Garcia',
+                avatar: '👩‍📊',
+                status: 'Taking notes',
+                isActive: false,
+                role: 'Business Analyst'
+            },
+            {
+                id: 'user-10',
+                name: 'Robert Taylor',
+                avatar: '👨‍🏫',
+                status: 'Listening',
+                isActive: false,
+                role: 'Tech Lead'
             }
         ];
 

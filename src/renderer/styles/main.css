@@ -427,15 +427,16 @@ html, body {
     background: #1a1a1a;
     border: 1px solid #374151;
     border-radius: 8px;
-    padding: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    padding: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
     z-index: 1000;
-    min-width: 200px;
-    max-width: 300px;
+    min-width: 250px;
+    max-width: 400px;
     margin-bottom: 8px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(8px);
 }
 
 .keyword-tooltip.visible {
@@ -449,29 +450,96 @@ html, body {
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    border: 6px solid transparent;
+    border: 8px solid transparent;
     border-top-color: #374151;
 }
 
 .tooltip-title {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     color: #ffffff;
     margin-bottom: 8px;
+    text-transform: capitalize;
+}
+
+.tooltip-definition {
+    font-size: 13px;
+    color: #d1d5db;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: #111;
+    border-radius: 6px;
+    border-left: 3px solid #10b981;
 }
 
 .tooltip-context {
     font-size: 12px;
     color: #9ca3af;
     line-height: 1.4;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    font-style: italic;
+}
+
+.tooltip-contexts {
+    margin-bottom: 12px;
+}
+
+.tooltip-contexts strong {
+    font-size: 11px;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.context-item {
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.4;
+    margin-bottom: 4px;
+    padding: 4px 8px;
+    background: #111;
+    border-radius: 4px;
+    font-style: italic;
+}
+
+.tooltip-related {
+    margin-bottom: 12px;
+    padding: 8px;
+    background: #0f172a;
+    border-radius: 6px;
+    border: 1px solid #1e293b;
+}
+
+.tooltip-related strong {
+    font-size: 11px;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.related-term {
+    display: inline-block;
+    font-size: 10px;
+    color: #60a5fa;
+    background: #1e3a8a;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin: 2px 2px 2px 0;
+    font-weight: 500;
 }
 
 .tooltip-stats {
     display: flex;
-    gap: 12px;
+    gap: 16px;
     font-size: 11px;
     color: #6b7280;
+    padding-top: 12px;
+    border-top: 1px solid #374151;
 }
 
 .tooltip-stat {
@@ -479,11 +547,19 @@ html, body {
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    flex: 1;
 }
 
 .tooltip-stat-value {
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 14px;
     color: #10b981;
+}
+
+.tooltip-stat div:last-child {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 9px;
 }
 
 .transcription-controls {
@@ -684,45 +760,92 @@ html, body {
 .participants-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.participants-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.participants-list::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 2px;
+}
+
+.participants-list::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 2px;
+}
+
+.participants-list::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
 }
 
 .participant-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px;
+    padding: 10px;
     background: #111;
     border: 1px solid #333;
     border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.participant-item:hover {
+    background: #1a1a1a;
+    border-color: #404040;
 }
 
 .participant-avatar {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     background: #374151;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 .participant-info {
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 .participant-name {
-    font-weight: 500;
-    font-size: 12px;
+    font-weight: 600;
+    font-size: 13px;
     color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.participant-role {
+    font-size: 10px;
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .participant-status {
     font-size: 11px;
     color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .participant-indicators {
