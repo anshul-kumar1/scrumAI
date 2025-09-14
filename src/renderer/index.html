@@ -44,7 +44,7 @@
         <section class="control-panel">
             <div class="meeting-controls">
                 <button id="start-meeting-btn" class="control-btn primary">
-                    <span class="btn-icon">🎤</span>
+                    <span class="btn-icon">▶️</span>
                     Start Meeting
                 </button>
                 <button id="stop-meeting-btn" class="control-btn danger" disabled>
@@ -57,14 +57,6 @@
                 </button>
             </div>
             
-            <!-- Audio Visualization -->
-            <div class="audio-visualization">
-                <canvas id="audio-canvas" width="400" height="100"></canvas>
-                <div class="audio-levels">
-                    <div class="level-indicator" id="mic-level"></div>
-                    <span class="level-label">Microphone Level</span>
-                </div>
-            </div>
         </section>
 
         <!-- Real-time Content Area -->
@@ -114,12 +106,10 @@
     <footer class="app-footer">
         <div class="footer-content">
             <div class="connection-status">
-                <span id="auth-status" class="status-indicator">🔐 Auth: Not authenticated</span>
-                <span id="db-status" class="status-indicator">🔗 Database: Disconnected</span>
-                <span id="ai-status" class="status-indicator">🧠 AI: Ready</span>
+                <span class="status-indicator">📊 ScrumAI Meeting Assistant</span>
             </div>
             <div class="app-version">
-                <span>v1.0.0 | Privacy-First AI Processing</span>
+                <span>v1.0.0 | Meeting Management Tool</span>
             </div>
         </div>
     </footer>
@@ -127,7 +117,7 @@
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>
-        <p>Initializing AI models...</p>
+        <p>Initializing application...</p>
     </div>
 
     <!-- JavaScript Components -->

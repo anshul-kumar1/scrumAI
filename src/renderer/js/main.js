@@ -3,17 +3,12 @@
  * 
  * This is the primary JavaScript file for the renderer process.
  * Responsibilities:
- * - Initialize all UI components and managers
- * - Coordinate between different modules (audio, AI, database)
+ * - Initialize UI components
  * - Handle main application state and event flow
  * - Manage meeting lifecycle and user interactions
  * - Provide centralized error handling and logging
  */
 
-import { authManager } from '../auth/authManager.js';
-import { authUI } from '../auth/authUI.js';
-import { AudioManager } from './audio-manager.js';
-import { AIInterface } from './ai-interface.js';
 import { UIController } from './ui-controller.js';
 
 class ScrumAIApp {
@@ -24,23 +19,13 @@ class ScrumAIApp {
         this.meetingTimer = null;
         
         // Component instances
-        this.audioManager = null;
-        this.aiInterface = null;
-        this.databaseClient = null;
         this.uiController = null;
         
         // Application state
         this.state = {
             isMeetingActive: false,
-            isAudioEnabled: true,
-            participants: [],
-            isAuthenticated: false,
-            currentUser: null,
-            currentInsights: {
-                sentiment: 'neutral',
-                keywords: [],
-                actionItems: []
-            }
+            isMuted: false,
+            participants: []
         };
     }
 
@@ -51,15 +36,6 @@ class ScrumAIApp {
         try {
             console.log('Initializing ScrumAI Meeting Assistant...');
             
-            // Show loading overlay
-            this.showLoading('Initializing authentication...');
-            
-            // Initialize authentication first
-            await this.initializeAuth();
-            
-            // Show loading overlay
-            this.showLoading('Initializing application...');
-            
             // Initialize components
             await this.initializeComponents();
             
@@ -68,9 +44,6 @@ class ScrumAIApp {
             
             // Initialize UI state
             this.initializeUI();
-            
-            // Hide loading overlay
-            this.hideLoading();
             
             this.isInitialized = true;
             console.log('ScrumAI Meeting Assistant initialized successfully');
@@ -82,93 +55,15 @@ class ScrumAIApp {
     }
 
     /**
-     * Initialize authentication
-     */
-    async initializeAuth() {
-        try {
-            // Initialize auth manager
-            const result = await authManager.init();
-            if (!result.success) {
-                throw result.error;
-            }
-
-            // Update app state
-            this.state.isAuthenticated = authManager.isUserAuthenticated();
-            this.state.currentUser = authManager.getCurrentUser();
-
-            // Initialize auth UI
-            authUI.init();
-            
-            // Update initial connection status
-            this.updateConnectionStatus();
-
-            // Listen for auth state changes
-            authManager.onAuthChange((event, user) => {
-                this.state.isAuthenticated = event === 'signed-in';
-                // Get user from authManager to ensure consistency
-                this.state.currentUser = authManager.getCurrentUser();
-                this.updateConnectionStatus(); // Update all connection statuses
-                
-                if (event === 'signed-in') {
-                    console.log('User signed in:', this.state.currentUser?.email || 'unknown');
-                    console.log('Current user object:', this.state.currentUser);
-                } else if (event === 'signed-out') {
-                    console.log('User signed out');
-                    // Stop any active meetings
-                    if (this.state.isMeetingActive) {
-                        this.stopMeeting();
-                    }
-                }
-            });
-
-            console.log('Authentication initialized');
-        } catch (error) {
-            console.error('Failed to initialize authentication:', error);
-            throw error;
-        }
-    }
-
-    /**
      * Initialize all component managers
      */
     async initializeComponents() {
-        // Initialize audio manager
-        this.audioManager = new AudioManager();
-        await this.audioManager.init();
-        
-        // Initialize AI interface
-        this.aiInterface = new AIInterface();
-        this.aiInterface.init();
-        
         // Initialize UI controller
         this.uiController = new UIController();
         this.uiController.init();
         
         // Make UI controller globally accessible for keyword tooltips
         window.uiController = this.uiController;
-        
-        // Set up inter-component communication
-        this.setupComponentCommunication();
-    }
-
-    /**
-     * Set up communication between components
-     */
-    setupComponentCommunication() {
-        // Audio data flow: AudioManager → AIInterface
-        this.audioManager.onAudioData((audioData) => {
-            this.aiInterface.processAudio(audioData);
-        });
-        
-        // AI results flow: AIInterface → UI updates
-        this.aiInterface.onResults((results) => {
-            this.handleAIResults(results);
-        });
-        
-        // Database real-time updates (commented out - no database client)
-        // this.databaseClient.onRealtimeUpdate((update) => {
-        //     this.handleRealtimeUpdate(update);
-        // });
     }
 
     /**
@@ -186,13 +81,6 @@ class ScrumAIApp {
         
         document.getElementById('mute-btn').addEventListener('click', () => {
             this.toggleMute();
-        });
-        
-        // Tab switching for insights panel
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.switchTab(e.target.dataset.tab);
-            });
         });
         
         // Export functionality
@@ -215,8 +103,6 @@ class ScrumAIApp {
      */
     initializeUI() {
         this.updateMeetingStatus(false);
-        this.updateConnectionStatus();
-        this.uiController.showWelcomeMessage();
     }
 
     /**
@@ -225,70 +111,31 @@ class ScrumAIApp {
     async startMeeting() {
         try {
             console.log('Starting meeting...');
-            console.log('Current auth state:', {
-                isAuthenticated: this.state.isAuthenticated,
-                currentUser: this.state.currentUser
-            });
             
-            // Check authentication
-            if (!this.state.isAuthenticated) {
-                console.warn('Cannot start meeting: user not authenticated');
-                authUI.show();
-                return;
-            }
-            
-            // Check if currentUser is available
-            if (!this.state.currentUser) {
-                console.error('Cannot start meeting: currentUser is null/undefined');
-                // Try to refresh user state
-                this.state.currentUser = authManager.getCurrentUser();
-                if (!this.state.currentUser) {
-                    console.error('Still no currentUser after refresh, showing auth UI');
-                    authUI.show();
-                    return;
-                }
-            }
-            
-            // Create meeting data with fallbacks
+            // Create meeting data
             const meetingData = {
                 title: `Meeting ${new Date().toLocaleString()}`,
-                organizer_id: this.state.currentUser?.id || 'unknown',
                 startTime: new Date().toISOString(),
-                participants: [this.state.currentUser?.email || 'unknown@example.com']
+                participants: ['Demo User']
             };
             
             console.log('Meeting data:', meetingData);
             
-            // Start meeting via Electron API
-            const result = await window.electronAPI.startMeeting(meetingData);
+            this.currentMeeting = meetingData;
+            this.meetingStartTime = Date.now();
+            this.state.isMeetingActive = true;
             
-            if (result.success) {
-                this.currentMeeting = {
-                    id: result.meetingId,
-                    ...meetingData
-                };
-                
-                this.meetingStartTime = Date.now();
-                this.state.isMeetingActive = true;
-                
-                // Start audio recording
-                await this.audioManager.startRecording();
-                
-                // Update UI
-                this.updateMeetingStatus(true);
-                this.startMeetingTimer();
-                
-                // Initialize mock participants for UI development
-                this.initializeMockParticipants();
-                
-                // Initialize mock keywords for UI development
-                this.uiController.initializeMockKeywords();
-                
-                // Save meeting to database (commented out - no database client)
-                // await this.databaseClient.saveMeeting(this.currentMeeting);
-                
-                console.log('Meeting started successfully');
-            }
+            // Update UI
+            this.updateMeetingStatus(true);
+            this.startMeetingTimer();
+            
+            // Initialize mock participants for UI development
+            this.initializeMockParticipants();
+            
+            // Initialize mock keywords for UI development
+            this.uiController.initializeMockKeywords();
+            
+            console.log('Meeting started successfully');
             
         } catch (error) {
             console.error('Failed to start meeting:', error);
@@ -305,19 +152,10 @@ class ScrumAIApp {
             
             if (!this.state.isMeetingActive) return;
             
-            // Stop meeting via Electron API
-            await window.electronAPI.stopMeeting();
-            
-            // Stop audio recording
-            this.audioManager.stopRecording();
-            
             // Update meeting end time
             if (this.currentMeeting) {
                 this.currentMeeting.endTime = new Date().toISOString();
                 this.currentMeeting.duration = Date.now() - this.meetingStartTime;
-                
-                // Save final meeting data (commented out - no database client)
-                // await this.databaseClient.updateMeeting(this.currentMeeting);
             }
             
             // Reset state
@@ -342,73 +180,29 @@ class ScrumAIApp {
     }
 
     /**
-     * Toggle audio mute
+     * Toggle mute state
      */
     toggleMute() {
-        this.state.isAudioEnabled = !this.state.isAudioEnabled;
-        this.audioManager.setMuted(!this.state.isAudioEnabled);
-        this.uiController.updateMuteButton(this.state.isAudioEnabled);
+        this.state.isMuted = !this.state.isMuted;
+        this.updateMuteButton();
+        console.log(`Audio ${this.state.isMuted ? 'muted' : 'unmuted'}`);
     }
 
     /**
-     * Handle AI processing results
+     * Update mute button appearance
      */
-    handleAIResults(results) {
-        try {
-            // Update transcription
-            if (results.transcription) {
-                this.uiController.addTranscription(results.transcription);
-            }
-            
-            // Update sentiment analysis
-            if (results.sentiment) {
-                this.state.currentInsights.sentiment = results.sentiment;
-                this.uiController.updateSentiment(results.sentiment);
-            }
-            
-            // Update keywords
-            if (results.keywords) {
-                this.state.currentInsights.keywords = results.keywords;
-                this.uiController.updateKeywords(results.keywords);
-            }
-            
-            // Update action items
-            if (results.actionItems) {
-                this.state.currentInsights.actionItems = results.actionItems;
-                this.uiController.updateActionItems(results.actionItems);
-            }
-            
-            // Save insights to database (commented out - no database client)
-            // if (this.currentMeeting) {
-            //     this.databaseClient.saveInsight({
-            //         meetingId: this.currentMeeting.id,
-            //         timestamp: new Date().toISOString(),
-            //         ...results
-            //     });
-            // }
-            
-        } catch (error) {
-            console.error('Failed to handle AI results:', error);
-        }
-    }
-
-    /**
-     * Handle real-time database updates
-     */
-    handleRealtimeUpdate(update) {
-        console.log('Real-time update received:', update);
+    updateMuteButton() {
+        const muteBtn = document.getElementById('mute-btn');
+        const icon = muteBtn.querySelector('.btn-icon');
         
-        // Handle different types of updates
-        switch (update.type) {
-            case 'participant_joined':
-                this.addParticipant(update.participant);
-                break;
-            case 'participant_left':
-                this.removeParticipant(update.participantId);
-                break;
-            case 'insight_added':
-                this.handleAIResults(update.insight);
-                break;
+        if (this.state.isMuted) {
+            icon.textContent = '🔇';
+            muteBtn.classList.add('active');
+            muteBtn.innerHTML = '<span class="btn-icon">🔇</span>Unmute';
+        } else {
+            icon.textContent = '🔊';
+            muteBtn.classList.remove('active');
+            muteBtn.innerHTML = '<span class="btn-icon">🔊</span>Mute';
         }
     }
 
@@ -461,64 +255,10 @@ class ScrumAIApp {
         }
     }
 
-    updateConnectionStatus() {
-        this.updateAuthStatus();
-        
-        // Update database status
-        const dbStatus = document.getElementById('db-status');
-        if (dbStatus) {
-            const dbClass = this.state.isAuthenticated ? 'status-indicator connected' : 'status-indicator disconnected';
-            dbStatus.className = dbClass;
-            dbStatus.textContent = this.state.isAuthenticated ? '🔗 Database: Connected' : '🔗 Database: Disconnected';
-        }
-        
-        // Update AI status
-        const aiStatus = document.getElementById('ai-status');
-        if (aiStatus) {
-            aiStatus.className = this.aiInterface && this.aiInterface.isReady ? 'status-indicator connected' : 'status-indicator disconnected';
-        }
-    }
-
-    /**
-     * Update authentication status in UI
-     */
-    updateAuthStatus() {
-        const authStatus = document.getElementById('auth-status');
-        if (authStatus) {
-            if (this.state.isAuthenticated) {
-                authStatus.className = 'status-indicator connected';
-                authStatus.textContent = `🔐 Auth: ${this.state.currentUser?.email || 'Authenticated'}`;
-            } else {
-                authStatus.className = 'status-indicator disconnected';
-                authStatus.textContent = '🔐 Auth: Not authenticated';
-            }
-        }
-    }
 
     /**
      * Utility methods
      */
-    switchTab(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
-        });
-        
-        // Update tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.toggle('active', content.id === `${tabName}-tab`);
-        });
-    }
-
-    showLoading(message) {
-        const overlay = document.getElementById('loading-overlay');
-        overlay.querySelector('p').textContent = message;
-        overlay.classList.remove('hidden');
-    }
-
-    hideLoading() {
-        document.getElementById('loading-overlay').classList.add('hidden');
-    }
 
     exportTranscription() {
         const transcription = this.uiController.getTranscriptionText();
@@ -579,15 +319,6 @@ class ScrumAIApp {
         if (this.state.isMeetingActive) {
             this.stopMeeting();
         }
-        
-        if (this.audioManager) {
-            this.audioManager.cleanup();
-        }
-        
-        // Database cleanup (commented out - no database client)
-        // if (this.databaseClient) {
-        //     this.databaseClient.cleanup();
-        // }
     }
 }
 
