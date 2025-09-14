@@ -65,43 +65,118 @@
             <!-- Content Panel -->
             <section class="content-panel">
                 <!-- Tab Navigation -->
-                <div class="tab-navigation">
-                    <button class="tab-btn active" data-tab="keywords">
-                        <span class="tab-icon">🏷️</span>
-                        Keywords
-                        <span class="tab-count" id="keyword-count">0</span>
-                    </button>
-                    <button class="tab-btn" data-tab="transcript">
-                        <span class="tab-icon">📝</span>
-                        Transcript
-                    </button>
-                    <button class="tab-btn" data-tab="chat">
-                        <span class="tab-icon">💬</span>
-                        Chat
-                    </button>
+                <div class="tab-navigation" id="tab-navigation">
+                    <!-- Live Meeting Tabs -->
+                    <div class="live-tabs">
+                        <button class="tab-btn active" data-tab="keywords">
+                            <span class="tab-icon">🏷️</span>
+                            Keywords
+                            <span class="tab-count" id="keyword-count">0</span>
+                        </button>
+                        <button class="tab-btn" data-tab="transcript">
+                            <span class="tab-icon">📝</span>
+                            Transcript
+                        </button>
+                        <button class="tab-btn" data-tab="chat">
+                            <span class="tab-icon">💬</span>
+                            Chat
+                        </button>
+                        <div class="post-meeting-tabs hidden">
+                            <button class="tab-btn active" data-tab="notes">
+                                <span class="tab-icon">📋</span>
+                                Meeting Notes
+                            </button>
+                            <button class="tab-btn" data-tab="strategy">
+                                <span class="tab-icon">🎯</span>
+                                Strategy & Actions
+                            </button>
+                        </div>
+                    </div>                    
                 </div>
                 
                 <!-- Tab Content -->
                 <div class="tab-content-container">
-                    <!-- Keywords Tab -->
-                    <div id="keywords-tab" class="tab-content active">
-                        <div id="keywords-container" class="keywords-content">
-                            <p class="placeholder-text">Start a meeting to see keywords...</p>
+                    <!-- Live Meeting Content -->
+                    <div class="live-content">
+                        <!-- Keywords Tab -->
+                        <div id="keywords-tab" class="tab-content active">
+                            <div id="keywords-container" class="keywords-content">
+                                <p class="placeholder-text">Start a meeting to see keywords...</p>
+                            </div>
+                            
+                            <div id="keyword-details" class="keyword-details hidden">
+                                <h4 class="details-title"></h4>
+                                <div class="details-definition"></div>
+                                <div class="details-contexts"></div>
+                                <div class="details-related"></div>
+                                <div class="details-stats"></div>
+                            </div>
                         </div>
                         
-                        <div id="keyword-details" class="keyword-details hidden">
-                            <h4 class="details-title"></h4>
-                            <div class="details-definition"></div>
-                            <div class="details-contexts"></div>
-                            <div class="details-related"></div>
-                            <div class="details-stats"></div>
+                        <!-- Transcript Tab -->
+                        <div id="transcript-tab" class="tab-content">
+                            <div id="transcript-content" class="transcript-content">
+                                <p class="placeholder-text">Start a meeting to see transcript...</p>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Transcript Tab -->
-                    <div id="transcript-tab" class="tab-content">
-                        <div id="transcript-content" class="transcript-content">
-                            <p class="placeholder-text">Start a meeting to see transcript...</p>
+                    <!-- Post-Meeting Content (hidden initially) -->
+                    <div class="post-meeting-content hidden">
+                        <!-- Meeting Notes Tab -->
+                        <div id="notes-tab" class="tab-content active">
+                            <div class="notes-header">
+                                <h3>📋 Meeting Summary</h3>
+                                <div class="header-controls">
+                                    <button id="edit-notes-btn" class="control-btn secondary edit-btn">
+                                        <span class="btn-icon">✏️</span>
+                                        Edit
+                                    </button>
+                                    <button id="save-notes-btn" class="control-btn primary save-btn hidden">
+                                        <span class="btn-icon">💾</span>
+                                        Save
+                                    </button>
+                                    <button id="export-notes-notion" class="control-btn primary notion-btn">
+                                        <span class="btn-icon">📤</span>
+                                        Export to Notion
+                                    </button>
+                                    <button id="export-notes-github" class="control-btn primary github-btn">
+                                        <span class="btn-icon">📋</span>
+                                        Export to GitHub
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="notes-content" class="notes-content" contenteditable="false">
+                                <p class="placeholder-text">Meeting notes will appear here after the meeting ends...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Strategy Tab -->
+                        <div id="strategy-tab" class="tab-content">
+                            <div class="strategy-header">
+                                <h3>🎯 Strategy & Action Items</h3>
+                                <div class="header-controls">
+                                    <button id="edit-strategy-btn" class="control-btn secondary edit-btn">
+                                        <span class="btn-icon">✏️</span>
+                                        Edit
+                                    </button>
+                                    <button id="save-strategy-btn" class="control-btn primary save-btn hidden">
+                                        <span class="btn-icon">💾</span>
+                                        Save
+                                    </button>
+                                    <button id="export-strategy-notion" class="control-btn primary notion-btn">
+                                        <span class="btn-icon">📤</span>
+                                        Export to Notion
+                                    </button>
+                                    <button id="export-strategy-github" class="control-btn primary github-btn">
+                                        <span class="btn-icon">📋</span>
+                                        Export to GitHub
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="strategy-content" class="strategy-content" contenteditable="false">
+                                <p class="placeholder-text">Strategy and action items will appear here after the meeting ends...</p>
+                            </div>
                         </div>
                     </div>
 
@@ -128,7 +203,6 @@
                 <!-- Controls -->
                 <div class="content-controls">
                     <button id="clear-content" class="control-btn small">Clear</button>
-                    <button id="export-content" class="control-btn small">Export</button>
                 </div>
             </section>
 
