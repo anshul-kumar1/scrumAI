@@ -10,6 +10,7 @@
  */
 
 import { UIController } from './ui-controller.js';
+import { notionIntegration } from './notion-integration.js';
 
 class ScrumAIApp {
     constructor() {
@@ -20,6 +21,13 @@ class ScrumAIApp {
         
         // Component instances
         this.uiController = null;
+        this.notionIntegration = notionIntegration;
+        
+        // Notion API credentials
+        this.notionConfig = {
+            apiKey: "ntn_b21836603815tHxhJd8M44AeLsp2bAHgpqbmNVnlMaE3Sg",
+            parentPageId: "26e08228035d805ca45ac47eac1b3849"
+        };
         
         // Application state
         this.state = {
@@ -63,6 +71,18 @@ class ScrumAIApp {
         // Initialize UI controller
         this.uiController = new UIController();
         this.uiController.init();
+        
+        // Initialize Notion integration
+        try {
+            await this.notionIntegration.initialize(
+                this.notionConfig.apiKey,
+                this.notionConfig.parentPageId
+            );
+            console.log('Notion integration ready');
+        } catch (error) {
+            console.warn('Notion integration failed to initialize:', error.message);
+            // Continue without Notion integration
+        }
         
         // Make UI controller globally accessible for keyword tooltips
         window.uiController = this.uiController;
@@ -553,28 +573,68 @@ class ScrumAIApp {
     /**
      * Export content to Notion
      */
-    exportToNotion(contentType) {
-        const content = contentType === 'notes' ? 
-            document.getElementById('notes-content').textContent :
-            document.getElementById('strategy-content').textContent;
-        
-        // Simulate Notion export
-        console.log(`Exporting ${contentType} to Notion...`);
-        console.log('Content:', content);
-        
-        // Show success message
+    async exportToNotion(contentType) {
         const button = document.getElementById(`export-${contentType}-notion`);
         const originalText = button.innerHTML;
-        button.innerHTML = '<span class="btn-icon">✅</span>Exported!';
-        button.disabled = true;
         
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.disabled = false;
-        }, 2000);
-        
-        // In a real implementation, this would integrate with Notion API
-        alert(`${contentType === 'notes' ? 'Meeting Notes' : 'Strategy & Actions'} exported to Notion successfully!`);
+        try {
+            // Show loading state
+            button.innerHTML = '<span class="btn-icon">⏳</span>Exporting...';
+            button.disabled = true;
+            
+            // Get content based on type
+            let content;
+            if (contentType === 'notes') {
+                const notesElement = document.getElementById('notes-content');
+                content = notesElement.textContent || notesElement.innerText || '';
+            } else if (contentType === 'strategy') {
+                const strategyElement = document.getElementById('strategy-content');
+                content = strategyElement.textContent || strategyElement.innerText || '';
+            }
+            
+            // Check if Notion integration is ready
+            if (!this.notionIntegration.isInitialized) {
+                throw new Error('Notion integration is not available. Please check your API credentials.');
+            }
+            
+            // Export to Notion
+            console.log(`Exporting ${contentType} to Notion...`);
+            const result = await this.notionIntegration.exportStrategyContent(content);
+            
+            if (result.success) {
+                // Show success message
+                button.innerHTML = '<span class="btn-icon">✅</span>Exported!';
+                
+                // Show success notification with link
+                this.showNotificationWithLink(
+                    `${contentType === 'notes' ? 'Meeting Notes' : 'Strategy & Actions'} exported to Notion successfully!`,
+                    'success',
+                    result.pageUrl
+                );
+                
+                console.log('Successfully exported to Notion:', result.pageUrl);
+            } else {
+                throw new Error('Export failed - no success response from Notion');
+            }
+            
+        } catch (error) {
+            console.error('Failed to export to Notion:', error);
+            
+            // Show error state
+            button.innerHTML = '<span class="btn-icon">❌</span>Failed';
+            
+            // Show error notification
+            this.showNotification(
+                `Failed to export to Notion: ${error.message}`,
+                'error'
+            );
+        } finally {
+            // Reset button after delay
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 3000);
+        }
     }
 
     exportContent() {
@@ -678,12 +738,118 @@ class ScrumAIApp {
     }
 
     /**
+     * Show notification message
+     */
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            max-width: 300px;
+            word-wrap: break-word;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        `;
+        notification.textContent = message;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remove after delay
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
+    }
+
+    /**
+     * Show notification with clickable link
+     */
+    showNotificationWithLink(message, type = 'info', url = null) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            max-width: 350px;
+            word-wrap: break-word;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        `;
+        
+        if (url) {
+            notification.innerHTML = `
+                <div>${message}</div>
+                <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">
+                    Click to open in Notion
+                </div>
+            `;
+            notification.addEventListener('click', () => {
+                window.open(url, '_blank');
+            });
+        } else {
+            notification.textContent = message;
+        }
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remove after delay
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 8000); // Longer delay for clickable notifications
+    }
+
+    /**
      * Error handling
      */
     handleError(message, error) {
         console.error(message, error);
         // Show user-friendly error message
-        alert(`${message}: ${error.message || error}`);
+        this.showNotification(`${message}: ${error.message || error}`, 'error');
     }
 
     /**
