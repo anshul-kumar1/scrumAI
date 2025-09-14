@@ -2,6 +2,8 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from websocket import router as websocket_router
 
 # Configure logging
@@ -30,10 +32,21 @@ app.add_middleware(
 # Include WebSocket router
 app.include_router(websocket_router, prefix="/api/v1")
 
+# Serve static HTML files
 @app.get("/")
 async def root():
     """Health check endpoint."""
     return {"message": "ScrumAI Meeting Server is running", "status": "healthy"}
+
+@app.get("/client")
+async def desktop_client():
+    """Serve desktop client."""
+    return FileResponse("client_example.html")
+
+@app.get("/mobile")
+async def mobile_client():
+    """Serve mobile client."""
+    return FileResponse("mobile_client.html")
 
 @app.get("/health")
 async def health_check():
@@ -46,9 +59,17 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+    print("🚀 Starting SFU Server...")
+    print("💻 For cross-computer testing, both computers should access:")
+    print("   • http://localhost:8000/client (run this command on each computer)")
+    print("   • Or use ngrok/tunneling service for external access")
+    print()
+    print("🔧 WebRTC requires HTTPS for remote connections.")
+    print("   For production, set up proper SSL certificates.")
+    print()
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host="0.0.0.0",  # Listen on all interfaces
         port=8000,
         reload=True,
         log_level="info"

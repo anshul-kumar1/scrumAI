@@ -89,12 +89,26 @@
                     this.log('Microphone access granted');
                     this.updateStatus('Microphone ready, connecting...');
                     
-                    // Display local audio
+                    // Display local audio (muted to prevent feedback)
                     const localAudio = document.getElementById('localAudioElement');
                     localAudio.srcObject = this.localStream;
+                    localAudio.muted = true;  // Prevent audio feedback from your own microphone
+                    localAudio.volume = 0;    // Ensure no local playback
                     
-                    // Connect to WebSocket signaling server
-                    const wsUrl = `ws://localhost:8000/api/v1/ws?room_id=${roomId}&participant_id=${this.participantId}`;
+                    // Connect to WebSocket signaling server  
+                    // Handle ngrok HTTPS properly
+                    let wsUrl;
+                    if (window.location.hostname.includes('ngrok')) {
+                        // For ngrok, use the same host but with wss protocol
+                        wsUrl = `wss://${window.location.host}/api/v1/ws?room_id=${roomId}&participant_id=${this.participantId}`;
+                    } else {
+                        // For local or direct IP access
+                        const serverIP = window.location.hostname === 'localhost' ? 'localhost' : '10.20.94.242';
+                        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+                        wsUrl = `${protocol}://${serverIP}:8000/api/v1/ws?room_id=${roomId}&participant_id=${this.participantId}`;
+                    }
+                    
+                    this.log(`Connecting to: ${wsUrl}`);
                     this.websocket = new WebSocket(wsUrl);
                     
                     this.websocket.onopen = () => {
@@ -338,19 +352,28 @@
                     existingAudio.remove();
                 }
                 
-                // Create new audio element
+                // Create new audio element for remote participant
                 const audioElement = document.createElement('audio');
                 audioElement.id = `audio_${participantId}`;
                 audioElement.srcObject = stream;
-                audioElement.autoplay = true;
+                audioElement.autoplay = true;  // This is key - must autoplay for remote audio
                 audioElement.controls = true;
+                audioElement.volume = 1.0;     // Ensure full volume
+                audioElement.muted = false;    // Make sure it's not muted
+                
+                // Force audio to play (some browsers require user interaction)
+                audioElement.play().catch(e => {
+                    this.log(`Audio autoplay blocked for ${participantId}. Click the play button.`);
+                });
                 
                 const participantDiv = document.createElement('div');
                 participantDiv.className = 'participant';
-                participantDiv.innerHTML = `<h4>Participant: ${participantId}</h4>`;
+                participantDiv.innerHTML = `<h4>🔊 ${participantId}</h4>`;
                 participantDiv.appendChild(audioElement);
                 
                 container.appendChild(participantDiv);
+                
+                this.log(`Audio element created for ${participantId} - should be playing automatically`);
             }
             
             sendSignalingMessage(message) {

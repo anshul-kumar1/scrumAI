@@ -1,2 +1,15 @@
 node_modules
 .cursor
+*.DS_Store
+cert.pem
+key.pem
+*.pem
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.pyzw
+*.pyzwz
