@@ -277,6 +277,13 @@ html, body {
 .live-tabs,
 .post-meeting-tabs {
     display: flex;
+    gap: 4px;
+    padding: 8px;
+}
+
+.post-meeting-tabs {
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .post-meeting-tabs.hidden,
@@ -285,31 +292,65 @@ html, body {
 }
 
 .tab-btn {
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 16px;
-    background: transparent;
-    border: none;
+    padding: 12px 20px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
     color: #9ca3af;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
+    min-width: 140px;
+    white-space: nowrap;
 }
 
-.tab-btn:hover {
+/* Specific styling for live tabs to maintain flex behavior */
+.live-tabs .tab-btn {
+    flex: 1;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    min-width: auto;
+}
+
+/* Post-meeting tabs get special styling */
+.post-meeting-tabs .tab-btn {
+    flex: none;
+    margin: 2px;
+}
+
+/* Live tabs hover states */
+.live-tabs .tab-btn:hover {
     background: #1a1a1a;
     color: #ffffff;
 }
 
-.tab-btn.active {
+.live-tabs .tab-btn.active {
     background: #1a1a1a;
     color: #ffffff;
     border-bottom: 2px solid #3b82f6;
+}
+
+/* Post-meeting tabs hover and active states */
+.post-meeting-tabs .tab-btn:hover {
+    background: #2a2a2a;
+    border-color: #555;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.post-meeting-tabs .tab-btn.active {
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    border-color: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);
 }
 
 .tab-icon {
@@ -453,8 +494,9 @@ html, body {
 
 .header-controls {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .notes-header h3,
@@ -1472,6 +1514,17 @@ html, body {
     .participants-panel {
         display: none;
     }
+    
+    .post-meeting-tabs {
+        gap: 2px;
+        padding: 6px;
+    }
+    
+    .post-meeting-tabs .tab-btn {
+        min-width: 120px;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
 }
 
 @media (max-width: 900px) {
@@ -1481,6 +1534,26 @@ html, body {
     
     .insights-panel {
         max-height: 300px;
+    }
+    
+    .post-meeting-tabs {
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .post-meeting-tabs .tab-btn {
+        min-width: 200px;
+        width: auto;
+    }
+    
+    .header-controls {
+        gap: 8px;
+    }
+    
+    .header-controls .control-btn {
+        padding: 8px 12px;
+        font-size: 12px;
     }
 }
 

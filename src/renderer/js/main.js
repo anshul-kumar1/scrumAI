@@ -112,11 +112,6 @@ class ScrumAIApp {
             });
         });
         
-        // Export functionality
-        document.getElementById('export-content').addEventListener('click', () => {
-            this.exportContent();
-        });
-        
         document.getElementById('clear-content').addEventListener('click', () => {
             this.clearContent();
         });
@@ -634,16 +629,6 @@ class ScrumAIApp {
                 button.innerHTML = originalText;
                 button.disabled = false;
             }, 3000);
-        }
-    }
-
-    exportContent() {
-        if (this.state.activeTab === 'keywords') {
-            const transcription = this.uiController.getTranscriptionText();
-            console.log('Exporting keywords:', transcription);
-        } else if (this.state.activeTab === 'transcript') {
-            const transcript = document.getElementById('transcript-content').textContent;
-            console.log('Exporting transcript:', transcript);
         }
     }
 
